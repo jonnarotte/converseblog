@@ -10,7 +10,7 @@ export default defineConfig({
   basePath: '/studio',
   projectId,
   dataset,
-  schema,
+  schema: schema,
   plugins: [
     visionTool({ defaultApiVersion: apiVersion }),
   ],
