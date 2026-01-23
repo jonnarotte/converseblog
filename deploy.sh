@@ -77,6 +77,18 @@ if [ ! -d "$APP_DIR/.next/standalone" ]; then
     exit 1
 fi
 
+# Copy static files to standalone directory (required for Studio and static assets)
+echo -e "${YELLOW}📦 Copying static files...${NC}"
+if [ -d "$APP_DIR/.next/static" ]; then
+    mkdir -p "$APP_DIR/.next/standalone/.next"
+    cp -r "$APP_DIR/.next/static" "$APP_DIR/.next/standalone/.next/static"
+    echo -e "${GREEN}✓ Static files copied${NC}"
+fi
+if [ -d "$APP_DIR/public" ]; then
+    cp -r "$APP_DIR/public" "$APP_DIR/.next/standalone/public"
+    echo -e "${GREEN}✓ Public files copied${NC}"
+fi
+
 echo -e "${GREEN}✓ Build successful${NC}"
 
 echo -e "${YELLOW}⚙️  Step 7: Creating systemd service...${NC}"
@@ -92,6 +104,9 @@ WorkingDirectory=$APP_DIR
 Environment=NODE_ENV=production
 EnvironmentFile=$APP_DIR/.env.local
 ExecStart=/usr/bin/node $APP_DIR/.next/standalone/server.js
+Environment=NEXT_PUBLIC_SANITY_PROJECT_ID=\${NEXT_PUBLIC_SANITY_PROJECT_ID}
+Environment=NEXT_PUBLIC_SANITY_DATASET=\${NEXT_PUBLIC_SANITY_DATASET}
+Environment=NEXT_PUBLIC_SITE_URL=\${NEXT_PUBLIC_SITE_URL}
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -113,6 +128,29 @@ server {
     # Increase body size for file uploads (Sanity Studio)
     client_max_body_size 10M;
 
+    # Serve Next.js static files
+    location /_next/static {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_cache_valid 200 60m;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Serve public files
+    location /favicon.ico {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+    }
+
+    location /manifest.json {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+    }
+
+    # Main application (including Studio)
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
