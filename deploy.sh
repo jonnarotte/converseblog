@@ -84,6 +84,12 @@ if [ -d "$APP_DIR/.next/static" ]; then
     cp -r "$APP_DIR/.next/static" "$APP_DIR/.next/standalone/.next/static"
     echo -e "${GREEN}✓ Static files copied${NC}"
 fi
+# Copy server files needed for dynamic routes like Studio
+if [ -d "$APP_DIR/.next/server" ]; then
+    mkdir -p "$APP_DIR/.next/standalone/.next/server"
+    cp -r "$APP_DIR/.next/server/app" "$APP_DIR/.next/standalone/.next/server/app" 2>/dev/null || true
+    echo -e "${GREEN}✓ Server files copied${NC}"
+fi
 if [ -d "$APP_DIR/public" ]; then
     cp -r "$APP_DIR/public" "$APP_DIR/.next/standalone/public"
     echo -e "${GREEN}✓ Public files copied${NC}"
@@ -100,10 +106,10 @@ After=network.target
 [Service]
 Type=simple
 User=$USER
-WorkingDirectory=$APP_DIR
+WorkingDirectory=$APP_DIR/.next/standalone
 Environment=NODE_ENV=production
 EnvironmentFile=$APP_DIR/.env.local
-ExecStart=/usr/bin/node $APP_DIR/.next/standalone/server.js
+ExecStart=/usr/bin/node server.js
 Environment=NEXT_PUBLIC_SANITY_PROJECT_ID=\${NEXT_PUBLIC_SANITY_PROJECT_ID}
 Environment=NEXT_PUBLIC_SANITY_DATASET=\${NEXT_PUBLIC_SANITY_DATASET}
 Environment=NEXT_PUBLIC_SITE_URL=\${NEXT_PUBLIC_SITE_URL}
