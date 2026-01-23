@@ -20,8 +20,6 @@ const nextConfig = {
   output: 'standalone',
   // Compress output
   compress: true,
-  // Optimize production builds
-  swcMinify: true,
   // Reduce JavaScript bundle
   reactStrictMode: true,
   // Aggressive prefetching for instant navigation

@@ -53,8 +53,8 @@ fi
 
 cd $APP_DIR
 
-echo -e "${YELLOW}📦 Step 4: Installing dependencies...${NC}"
-npm install --production
+echo -e "${YELLOW}📦 Step 4: Installing dependencies (including dev dependencies for build)...${NC}"
+npm install
 
 echo -e "${YELLOW}🔧 Step 5: Checking environment variables...${NC}"
 if [ ! -f "$APP_DIR/.env.local" ]; then
