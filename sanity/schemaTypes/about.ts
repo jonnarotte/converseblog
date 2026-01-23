@@ -1,6 +1,6 @@
 import { defineType, defineField } from 'sanity'
 
-export const about = defineType({
+export default defineType({
   name: 'about',
   title: 'About Page',
   type: 'document',
@@ -9,20 +9,17 @@ export const about = defineType({
       name: 'title',
       title: 'Title',
       type: 'string',
-      validation: (Rule) => Rule.required(),
+      initialValue: 'About Converze',
     }),
     defineField({
-      name: 'body',
-      title: 'Body',
+      name: 'content',
+      title: 'Content',
       type: 'array',
-      of: [{ type: 'block' }],
-    }),
-    defineField({
-      name: 'images',
-      title: 'Images',
-      type: 'array',
-      of: [{ type: 'image', options: { hotspot: true } }],
+      of: [
+        {
+          type: 'block',
+        },
+      ],
     }),
   ],
 })
-

@@ -1,10 +1,10 @@
 {
   "version": 3,
-  "createdAt": "2026-01-18T06:33:03.939Z",
+  "createdAt": "2026-01-23T19:13:16.644Z",
   "workspaces": [
     {
-      "name": "default",
-      "title": "Default",
+      "name": "converze-blog",
+      "title": "Converze Blog",
       "basePath": "/studio",
       "projectId": "o23ktewy",
       "dataset": "production",
@@ -12,9 +12,9 @@
       "mediaLibrary": {
         "enabled": false
       },
-      "schema": "21fef149.create-schema.json",
-      "tools": "511be2e2.create-tools.json"
+      "schema": "eae8a41c.create-schema.json",
+      "tools": "4277de03.create-tools.json"
     }
   ],
-  "studioVersion": "4.22.0"
+  "studioVersion": "5.6.0"
 }

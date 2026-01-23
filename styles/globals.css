@@ -2,3 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --prose-headings: theme('colors.black');
+    --prose-body: theme('colors.gray.700');
+    --prose-links: theme('colors.black');
+    --accent-color: #3b82f6; /* Blue accent */
+  }
+
+  .dark {
+    --prose-headings: theme('colors.white');
+    --prose-body: theme('colors.gray.300');
+    --prose-links: theme('colors.white');
+    --accent-color: #60a5fa; /* Lighter blue for dark mode */
+  }
+
+  /* Ultra-sleek font weights */
+  body {
+    font-weight: 300;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  .font-bold {
+    font-weight: 500;
+  }
+
+  .font-semibold {
+    font-weight: 400;
+  }
+
+  .font-medium {
+    font-weight: 350;
+  }
+
+  /* Smooth transitions - only for interactive elements */
+  a, button, [role="button"] {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Performance: reduce repaints */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Optimize rendering */
+  img {
+    content-visibility: auto;
+  }
+
+  /* Prevent horizontal scrolling */
+  html {
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+  }
+
+  body {
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+    position: relative;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Ensure all containers respect viewport width */
+  section, div, main, nav, footer {
+    max-width: 100%;
+  }
+
+  /* Prevent SVG overflow */
+  svg {
+    max-width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Navbar specific fixes */
+  nav a {
+    max-width: 100%;
+  }
+}
+

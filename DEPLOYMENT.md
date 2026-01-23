@@ -1,161 +1,272 @@
-# Deployment Guide for Google Cloud Platform (GCP)
+# Deployment Guide for Converze Blog
 
-## Build Status ✅
-Your project builds successfully! The build completed without errors.
+This guide covers deploying your Next.js blog with Sanity CMS to a Google Cloud VM.
 
-## Prerequisites
-1. Google Cloud SDK (gcloud) installed
-2. GCP project created
-3. Billing enabled on your GCP project
+## Overview
 
-## Option 1: Deploy to Cloud Run (Recommended - Serverless)
+Your Next.js app is a **hybrid application** (not a pure SPA):
+- It uses **Server-Side Rendering (SSR)** and **Static Site Generation (SSG)**
+- It fetches data from Sanity CMS at build time and runtime
+- It cannot be deployed as a simple static SPA
 
-### Steps:
+## Deployment Options
 
-1. **Install Google Cloud SDK** (if not already installed):
-```bash
-# macOS
-brew install google-cloud-sdk
+### Option 1: Node.js Binary Deployment (Recommended - Simple & Efficient)
 
-# Verify installation
-gcloud --version
-```
+This is the **easiest and most efficient** approach for your use case.
 
-2. **Authenticate and set project**:
-```bash
-gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
-```
+#### Prerequisites
+- Google Cloud VM with Node.js 18+ installed
+- Nginx (or another reverse proxy)
+- Domain name (optional, can use IP)
 
-3. **Build and deploy using Cloud Build** (recommended):
-```bash
-# From your project root
-gcloud run deploy converseblog \
-  --source . \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
-```
+#### Steps
 
-4. **Or build Docker image manually**:
-```bash
-# Create Dockerfile in root (if not exists)
-# Then:
-gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/converseblog
-gcloud run deploy converseblog \
-  --image gcr.io/YOUR_PROJECT_ID/converseblog \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars NEXT_PUBLIC_SANITY_PROJECT_ID=o23ktewy,NEXT_PUBLIC_SANITY_DATASET=production
-```
+1. **Build the application on your VM:**
+   ```bash
+   # SSH into your VM
+   ssh your-vm-ip
 
-## Option 2: Deploy to App Engine (Traditional)
+   # Clone or upload your project
+   cd /var/www/converseblog
+   git clone <your-repo> .  # or upload files
 
-1. **Create `app.yaml`** in project root:
-```yaml
-runtime: nodejs20
+   # Install dependencies
+   npm install --production
 
-env_variables:
-  NEXT_PUBLIC_SANITY_PROJECT_ID: 'o23ktewy'
-  NEXT_PUBLIC_SANITY_DATASET: 'production'
-```
+   # Set environment variables
+   nano .env.local
+   ```
+   
+   Add these variables:
+   ```env
+   NEXT_PUBLIC_SANITY_PROJECT_ID=your-project-id
+   NEXT_PUBLIC_SANITY_DATASET=production
+   ```
 
-2. **Deploy**:
-```bash
-gcloud app deploy
-```
+2. **Build the application:**
+   ```bash
+   npm run build
+   ```
 
-## Option 3: Deploy to Compute Engine (VM)
+3. **Create a systemd service for auto-restart:**
+   ```bash
+   sudo nano /etc/systemd/system/converseblog.service
+   ```
+   
+   Add this configuration:
+   ```ini
+   [Unit]
+   Description=Converze Blog Next.js App
+   After=network.target
 
-1. **Create VM**:
-```bash
-gcloud compute instances create converseblog-vm \
-  --machine-type=e2-medium \
-  --zone=us-central1-a \
-  --image-family=cos-stable \
-  --image-project=cos-cloud
-```
+   [Service]
+   Type=simple
+   User=www-data
+   WorkingDirectory=/var/www/converseblog
+   Environment=NODE_ENV=production
+   EnvironmentFile=/var/www/converseblog/.env.local
+   ExecStart=/usr/bin/node node_modules/.bin/next start
+   Restart=always
+   RestartSec=10
 
-2. **SSH and setup**:
-```bash
-gcloud compute ssh converseblog-vm --zone=us-central1-a
-# Then install Node.js, clone repo, build, and run
-```
+   [Install]
+   WantedBy=multi-user.target
+   ```
 
-## Important: Environment Variables
+4. **Start the service:**
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable converseblog
+   sudo systemctl start converseblog
+   sudo systemctl status converseblog
+   ```
 
-**You MUST set these environment variables in GCP:**
+5. **Configure Nginx as reverse proxy:**
+   ```bash
+   sudo nano /etc/nginx/sites-available/converseblog
+   ```
+   
+   Add this configuration:
+   ```nginx
+   server {
+       listen 80;
+       server_name your-domain.com;  # or your VM IP
 
-- `NEXT_PUBLIC_SANITY_PROJECT_ID=o23ktewy`
-- `NEXT_PUBLIC_SANITY_DATASET=production`
-- `NEXT_PUBLIC_SANITY_API_VERSION=2025-06-27` (optional, has default)
+       location / {
+           proxy_pass http://localhost:3000;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+           proxy_cache_bypass $http_upgrade;
+       }
+   }
+   ```
 
-### For Cloud Run:
-```bash
-gcloud run services update converseblog \
-  --set-env-vars NEXT_PUBLIC_SANITY_PROJECT_ID=o23ktewy,NEXT_PUBLIC_SANITY_DATASET=production
-```
+6. **Enable the site and restart Nginx:**
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/converseblog /etc/nginx/sites-enabled/
+   sudo nginx -t
+   sudo systemctl restart nginx
+   ```
 
-### For App Engine:
-Add to `app.yaml`:
-```yaml
-env_variables:
-  NEXT_PUBLIC_SANITY_PROJECT_ID: 'o23ktewy'
-  NEXT_PUBLIC_SANITY_DATASET: 'production'
-```
+7. **Set up SSL (Optional but recommended):**
+   ```bash
+   sudo apt install certbot python3-certbot-nginx
+   sudo certbot --nginx -d your-domain.com
+   ```
 
-## What to Deploy?
-
-**You need to send your CODE, not just build files:**
-- GCP will build your project during deployment
-- Use `--source .` flag or push to a Git repository
-- GCP Cloud Build will run `npm run build` automatically
-
-### Files to include in deployment:
-- All source code (`app/`, `components/`, `sanity/`, etc.)
-- `package.json`
-- `next.config.js`
-- `tsconfig.json`
-- `tailwind.config.js`
-- All config files
-
-### Files to exclude (add to .gitignore):
-- `node_modules/`
-- `.next/`
-- `.env.local` (use GCP environment variables instead)
-- `.git/`
-
-## Sanity CORS Settings
-
-**Before deploying, update Sanity CORS:**
-1. Go to https://sanity.io/manage
-2. Select project `o23ktewy`
-3. Settings → API → CORS origins
-4. Add your GCP deployment URL (e.g., `https://your-app.run.app` or `https://your-project.appspot.com`)
-
-## Post-Deployment Checklist
-
-- [ ] Environment variables set in GCP
-- [ ] CORS origins updated in Sanity dashboard
-- [ ] Test `/studio` route works
-- [ ] Test blog posts load correctly
-- [ ] Check logs: `gcloud run logs read` or `gcloud app logs tail`
-
-## Quick Deploy Command (Cloud Run - Easiest)
+#### Updating the Application
 
 ```bash
-# From your project root
-gcloud run deploy converseblog \
-  --source . \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars NEXT_PUBLIC_SANITY_PROJECT_ID=o23ktewy,NEXT_PUBLIC_SANITY_DATASET=production
+cd /var/www/converseblog
+git pull  # or upload new files
+npm install --production
+npm run build
+sudo systemctl restart converseblog
 ```
 
-This will:
-1. Build your Next.js app
-2. Create a Docker container
-3. Deploy to Cloud Run
-4. Give you a public URL
+---
+
+### Option 2: Docker Deployment (Alternative)
+
+If you prefer containerization:
+
+1. **Create Dockerfile:**
+   ```dockerfile
+   FROM node:18-alpine AS builder
+   WORKDIR /app
+   COPY package*.json ./
+   RUN npm ci
+   COPY . .
+   RUN npm run build
+
+   FROM node:18-alpine AS runner
+   WORKDIR /app
+   ENV NODE_ENV=production
+   COPY --from=builder /app/public ./public
+   COPY --from=builder /app/.next/standalone ./
+   COPY --from=builder /app/.next/static ./.next/static
+   EXPOSE 3000
+   CMD ["node", "server.js"]
+   ```
+
+2. **Update next.config.js for standalone output:**
+   ```js
+   const nextConfig = {
+     output: 'standalone',
+     // ... rest of config
+   }
+   ```
+
+3. **Build and run:**
+   ```bash
+   docker build -t converseblog .
+   docker run -d -p 3000:3000 --env-file .env.local converseblog
+   ```
+
+---
+
+### Option 3: Static Export (NOT Recommended for Your Use Case)
+
+**Why this won't work well:**
+- Your blog fetches data from Sanity at runtime
+- Static export would require rebuilding every time content changes
+- You'd lose dynamic features
+
+**If you still want static export:**
+1. Set `output: 'export'` in next.config.js
+2. Run `npm run build` (creates `out` folder)
+3. Serve `out` folder with Nginx
+4. **Problem:** You'd need to rebuild and redeploy every time you add a blog post
+
+---
+
+## Why Binary Deployment is Best
+
+✅ **Simple:** Just Node.js + systemd + Nginx  
+✅ **Efficient:** No container overhead  
+✅ **Dynamic:** Fetches fresh content from Sanity  
+✅ **Auto-restart:** systemd handles crashes  
+✅ **Easy updates:** Just rebuild and restart  
+✅ **Lightweight:** Minimal resource usage  
+
+## Environment Variables
+
+Create `.env.local` on your VM:
+```env
+NEXT_PUBLIC_SANITY_PROJECT_ID=your-project-id
+NEXT_PUBLIC_SANITY_DATASET=production
+```
+
+**Important:** These are public variables (NEXT_PUBLIC_ prefix), so they're safe in client-side code.
+
+## Sanity Studio Access
+
+Your Sanity Studio is available at `/studio` route. Make sure it's accessible:
+- It will work automatically with your Next.js app
+- Access it at: `https://your-domain.com/studio`
+
+## Monitoring
+
+Check logs:
+```bash
+sudo journalctl -u converseblog -f
+```
+
+Check if service is running:
+```bash
+sudo systemctl status converseblog
+```
+
+## Troubleshooting
+
+1. **Port 3000 already in use:**
+   - Change port in systemd service: `ExecStart=/usr/bin/node node_modules/.bin/next start -p 3001`
+   - Update Nginx proxy_pass accordingly
+
+2. **Build fails:**
+   - Check Node.js version: `node --version` (needs 18+)
+   - Check environment variables are set
+
+3. **Sanity connection issues:**
+   - Verify project ID and dataset in `.env.local`
+   - Check Sanity project settings allow public read access
+
+4. **Nginx 502 Bad Gateway:**
+   - Check if Next.js app is running: `curl http://localhost:3000`
+   - Check Nginx error logs: `sudo tail -f /var/log/nginx/error.log`
+
+## Security Checklist
+
+- [ ] Firewall configured (only ports 80, 443 open)
+- [ ] SSL certificate installed
+- [ ] Environment variables secured
+- [ ] Regular updates scheduled
+- [ ] Backups configured
+
+## Cost Estimation
+
+- **VM:** ~$5-10/month (small instance)
+- **Sanity:** Free tier (up to 3 users, 10K documents)
+- **Domain:** ~$10-15/year (optional)
+- **Total:** ~$5-10/month
+
+---
+
+## Quick Start Commands
+
+```bash
+# On your VM
+cd /var/www/converseblog
+npm install --production
+npm run build
+sudo systemctl start converseblog
+sudo systemctl status converseblog
+```
+
+Your blog will be live at your VM's IP or domain!

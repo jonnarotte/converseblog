@@ -1,0 +1,21 @@
+{
+  "name": "Converze - Visualize Your Voice",
+  "short_name": "Converze",
+  "description": "A self-reflection app designed to help people understand how they sound",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

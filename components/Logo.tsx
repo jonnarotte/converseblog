@@ -1,0 +1,33 @@
+interface LogoProps {
+  className?: string
+  size?: number
+}
+
+export default function Logo({ className = "", size = 28 }: LogoProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={{ 
+        display: 'block', 
+        flexShrink: 0, 
+        width: `${size}px`, 
+        height: `${size}px`,
+        maxWidth: `${size}px`, 
+        maxHeight: `${size}px`,
+        overflow: 'visible'
+      }}
+      preserveAspectRatio="xMidYMid meet"
+    >
+      {/* Simple solid black C - half moon shape */}
+      <path
+        d="M20 10 C8 10, 0 25, 0 50 C0 75, 8 90, 20 90 C28 90, 35 87, 40 82 L40 72 C36 77, 30 80, 24 80 C16 80, 12 73, 12 50 C12 27, 16 20, 24 20 C30 20, 36 23, 40 28 L40 18 C35 13, 28 10, 20 10 Z"
+        fill="currentColor"
+      />
+    </svg>
+  )
+}

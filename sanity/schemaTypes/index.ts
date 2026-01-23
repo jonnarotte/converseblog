@@ -1,7 +1,6 @@
-import { type SchemaTypeDefinition } from 'sanity'
-import { post } from './post'
-import { about } from './about'
+import author from './author'
+import post from './post'
+import about from './about'
+import siteSettings from './siteSettings'
 
-export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [post, about],
-}
+export const schemaTypes = [author, post, about, siteSettings]
