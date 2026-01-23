@@ -12,8 +12,17 @@ echo "🔧 Fixing Studio static assets..."
 if [ -d ".next/static" ]; then
     echo "Copying static files to standalone directory..."
     mkdir -p .next/standalone/.next
+    # Copy all static files including chunks
     cp -r .next/static .next/standalone/.next/static
     echo "✓ Static files copied"
+    
+    # Verify chunks directory exists
+    if [ -d ".next/standalone/.next/static/chunks" ]; then
+        echo "✓ Chunks directory found"
+        ls -la .next/standalone/.next/static/chunks | head -5
+    else
+        echo "⚠️  Warning: Chunks directory not found"
+    fi
 fi
 
 # Copy server files needed for dynamic routes like Studio

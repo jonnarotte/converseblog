@@ -81,8 +81,15 @@ fi
 echo -e "${YELLOW}📦 Copying static files...${NC}"
 if [ -d "$APP_DIR/.next/static" ]; then
     mkdir -p "$APP_DIR/.next/standalone/.next"
+    # Remove existing static directory to avoid conflicts
+    rm -rf "$APP_DIR/.next/standalone/.next/static" 2>/dev/null || true
     cp -r "$APP_DIR/.next/static" "$APP_DIR/.next/standalone/.next/static"
-    echo -e "${GREEN}✓ Static files copied${NC}"
+    echo -e "${GREEN}✓ Static files copied (including chunks)${NC}"
+    # Verify chunks were copied
+    if [ -d "$APP_DIR/.next/standalone/.next/static/chunks" ]; then
+        CHUNK_COUNT=$(find "$APP_DIR/.next/standalone/.next/static/chunks" -name "*.js" 2>/dev/null | wc -l)
+        echo -e "${GREEN}✓ Copied $CHUNK_COUNT JavaScript chunks${NC}"
+    fi
 fi
 # Copy server files needed for dynamic routes like Studio
 if [ -d "$APP_DIR/.next/server" ]; then
