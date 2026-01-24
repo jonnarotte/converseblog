@@ -17,8 +17,8 @@ export default function SiteLayout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationData) }}
       />
+      <Navbar />
       <div className="w-full overflow-x-hidden">
-        <Navbar />
         <main className="flex-1 max-w-6xl mx-auto px-6 py-12 relative z-10 w-full overflow-x-hidden">
           {children}
         </main>

@@ -35,29 +35,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const slugs = await getAllPostSlugs()
     const blogPosts: MetadataRoute.Sitemap = slugs
-      .filter((item) => {
-        // Filter out items without valid slugs
-        if (typeof item.slug === 'object') {
-          return item.slug?.current != null
-        }
-        return item.slug != null
-      })
-      .map((item) => {
-        const slug = typeof item.slug === 'object' && item.slug?.current 
-          ? item.slug.current 
-          : (typeof item.slug === 'string' ? item.slug : '')
-        if (!slug) {
-          // Skip if no valid slug (shouldn't happen due to filter, but TypeScript needs this)
-          return null
-        }
-        return {
-          url: `${siteUrl}/blog/${slug}`,
-          lastModified: new Date(),
-          changeFrequency: 'weekly' as const,
-          priority: 0.7,
-        }
-      })
-      .filter((item): item is MetadataRoute.Sitemap[0] => item !== null)
+      .filter((item) => item.slug != null && item.slug.trim() !== '')
+      .map((item) => ({
+        url: `${siteUrl}/blog/${item.slug}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      }))
     return [...routes, ...blogPosts]
   } catch (error) {
     console.error('Error generating sitemap:', error)
