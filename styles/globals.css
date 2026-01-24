@@ -73,16 +73,38 @@
     box-sizing: border-box;
   }
 
-  /* Ensure all containers respect viewport width */
-  section, div, main, nav, footer {
+  /* Ensure all containers respect viewport width - but exclude Studio */
+  section:not([data-sanity]):not([data-sanity] *),
+  div:not([data-sanity]):not([data-sanity] *),
+  main:not([data-sanity]):not([data-sanity] *),
+  nav,
+  footer {
     max-width: 100%;
   }
 
-  /* Prevent SVG overflow */
-  svg {
+  /* Prevent SVG overflow - but exclude Studio */
+  svg:not([data-sanity]):not([data-sanity] *) {
     max-width: 100%;
     height: auto;
     overflow: visible;
+  }
+  
+  /* Isolate Sanity Studio from global styles */
+  [data-sanity],
+  [data-sanity] * {
+    font-weight: normal !important;
+    letter-spacing: normal !important;
+    max-width: none !important;
+  }
+  
+  /* Ensure Studio buttons and icons maintain proper size */
+  [data-sanity] button,
+  [data-sanity] [role="button"],
+  [data-sanity] svg {
+    width: auto !important;
+    height: auto !important;
+    min-width: auto !important;
+    min-height: auto !important;
   }
 
   /* Navbar - ensure it's in normal document flow and scrolls with page */
@@ -105,6 +127,18 @@
   
   nav a {
     max-width: 100%;
+  }
+  
+  /* Prevent global styles from affecting Sanity Studio */
+  [data-sanity] * {
+    box-sizing: border-box;
+  }
+  
+  /* Ensure Studio UI elements maintain proper sizing */
+  [data-sanity] button,
+  [data-sanity] [role="button"],
+  [data-sanity] svg {
+    box-sizing: border-box;
   }
 }
 
