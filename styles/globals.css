@@ -73,17 +73,13 @@
     box-sizing: border-box;
   }
 
-  /* Ensure all containers respect viewport width - exclude Studio */
-  section:not([data-sanity]):not([data-ui]),
-  div:not([data-sanity]):not([data-ui]),
-  main:not([data-sanity]):not([data-ui]),
-  nav,
-  footer {
+  /* Ensure all containers respect viewport width */
+  section, div, main, nav, footer {
     max-width: 100%;
   }
 
-  /* Prevent SVG overflow - exclude Studio */
-  svg:not([data-sanity]):not([data-ui]) {
+  /* Prevent SVG overflow */
+  svg {
     max-width: 100%;
     height: auto;
     overflow: visible;

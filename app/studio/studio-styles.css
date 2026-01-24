@@ -1,14 +1,15 @@
-/* Studio-specific styles to override global CSS */
+/* Studio-specific styles to override global CSS - ONLY affects Studio */
 
-/* Reset Studio elements to default sizes */
+/* Reset Studio elements to default sizes - target Studio container specifically */
+body:has([data-sanity]) [data-sanity] *,
+body:has([data-ui]) [data-ui] *,
 [data-sanity] *,
 [data-ui] * {
   font-weight: normal !important;
   letter-spacing: normal !important;
-  max-width: none !important;
 }
 
-/* Fix Studio SVG icons */
+/* Fix Studio SVG icons - only inside Studio */
 [data-sanity] svg,
 [data-ui] svg {
   width: auto !important;
