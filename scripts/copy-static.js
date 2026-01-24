@@ -43,6 +43,12 @@ function copyDir(src, dest) {
 
 console.log('📦 Copying static files to standalone directory...');
 
+// Check if standalone directory exists (build completed)
+if (!fs.existsSync(standaloneDir)) {
+  console.error('❌ Error: .next/standalone directory not found. Build may have failed.');
+  process.exit(1);
+}
+
 // Copy static files
 if (fs.existsSync(nextStatic)) {
   if (fs.existsSync(standaloneStatic)) {
@@ -55,11 +61,20 @@ if (fs.existsSync(nextStatic)) {
     if (fs.existsSync(chunksDir)) {
       const jsFiles = fs.readdirSync(chunksDir).filter(f => f.endsWith('.js'));
       console.log(`✓ Copied ${jsFiles.length} JavaScript chunks`);
+      if (jsFiles.length === 0) {
+        console.warn('⚠️  Warning: No JavaScript chunks found!');
+      }
+    } else {
+      console.warn('⚠️  Warning: Chunks directory not found after copy!');
     }
     console.log('✓ Static files copied');
+  } else {
+    console.error('❌ Failed to copy static files');
+    process.exit(1);
   }
 } else {
-  console.log('⚠️  .next/static directory not found');
+  console.error('❌ Error: .next/static directory not found');
+  process.exit(1);
 }
 
 // Copy public files
@@ -68,10 +83,13 @@ if (fs.existsSync(publicDir)) {
     fs.rmSync(standalonePublic, { recursive: true, force: true });
   }
   if (copyDir(publicDir, standalonePublic)) {
-    console.log('✓ Public files copied');
+    const publicFiles = fs.readdirSync(standalonePublic);
+    console.log(`✓ Public files copied (${publicFiles.length} files)`);
+  } else {
+    console.warn('⚠️  Failed to copy public files');
   }
 } else {
-  console.log('⚠️  public directory not found');
+  console.warn('⚠️  public directory not found');
 }
 
 // Copy server files for dynamic routes (Studio)
