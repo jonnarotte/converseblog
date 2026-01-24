@@ -79,7 +79,27 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className="overflow-x-hidden">
-      <body className="min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white transition-colors overflow-x-hidden w-full">
+      <body className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-colors overflow-x-hidden w-full">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  if (!theme) {
+                    theme = 'light';
+                    localStorage.setItem('theme', 'light');
+                  }
+                  if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
         <div className="w-full overflow-x-hidden">
           {children}
         </div>

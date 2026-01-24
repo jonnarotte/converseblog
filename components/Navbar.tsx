@@ -4,7 +4,17 @@ import Logo from "./Logo"
 
 export default function Navbar() {
   return (
-    <nav className="border-b border-gray-300 dark:border-gray-700 sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-sm w-full">
+    <nav 
+      className="border-b border-gray-300 dark:border-gray-700 w-full"
+      style={{ 
+        position: 'static',
+        top: 'auto',
+        left: 'auto',
+        right: 'auto',
+        bottom: 'auto',
+        zIndex: 'auto'
+      }}
+    >
       <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center w-full min-w-0 gap-4">
         <Link href="/" className="font-medium text-lg hover:opacity-80 transition-opacity flex items-center gap-2 flex-shrink-0" prefetch={true} style={{ minWidth: 0 }}>
           <div className="flex-shrink-0 w-7 h-7 flex items-center justify-center overflow-hidden">
