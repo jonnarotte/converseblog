@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import dynamicImport from 'next/dynamic'
 import config from '../../../sanity.config'
+import '../studio-styles.css'
 
 // Disable SSR for Studio to avoid hydration issues with Sanity's internal components
 const NextStudio = dynamicImport(
