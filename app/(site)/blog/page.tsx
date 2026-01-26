@@ -1,5 +1,7 @@
 import BlogCard from "@/components/BlogCard"
 import Newsletter from "@/components/Newsletter"
+import SearchBar from "@/components/SearchBar"
+import PopularPosts from "@/components/PopularPosts"
 import { getAllPosts } from "@/lib/sanity"
 import type { Metadata } from 'next'
 
@@ -18,22 +20,51 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function BlogPage() {
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string }>
+}) {
   const posts = await getAllPosts()
+  const { search } = await searchParams
+
+  // Filter posts based on search query
+  const filteredPosts = search
+    ? posts.filter(post => {
+        const query = search.toLowerCase()
+        const title = post.title.toLowerCase()
+        const excerpt = post.excerpt?.toLowerCase() || ''
+        return title.includes(query) || excerpt.includes(query)
+      })
+    : posts
 
   return (
     <section className="space-y-12 w-full overflow-x-hidden">
-      {posts.length === 0 ? (
+      <div className="flex justify-center">
+        <SearchBar posts={posts} />
+      </div>
+      
+      {filteredPosts.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500">No blog posts yet. Check back soon!</p>
+          <p className="text-gray-500">
+            {search ? `No posts found for "${search}"` : 'No blog posts yet. Check back soon!'}
+          </p>
         </div>
       ) : (
         <>
+          {search && (
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Found {filteredPosts.length} post{filteredPosts.length !== 1 ? 's' : ''} for &quot;{search}&quot;
+            </p>
+          )}
           <div className="grid md:grid-cols-2 gap-4">
-            {posts.map((post) => (
+            {filteredPosts.map((post) => (
               <BlogCard key={post._id} post={post} />
             ))}
           </div>
+          
+          {!search && <PopularPosts posts={posts} />}
+          
           <div className="max-w-2xl mx-auto pt-8">
             <Newsletter />
           </div>
@@ -43,7 +74,7 @@ export default async function BlogPage() {
   )
 }
 
-// Enable static generation for better performance
+// Enable ISR for better performance with search
 export const revalidate = 60 // Revalidate every 60 seconds
-export const dynamic = 'force-static' // Force static generation
+export const dynamic = 'force-dynamic' // Allow dynamic search params
 

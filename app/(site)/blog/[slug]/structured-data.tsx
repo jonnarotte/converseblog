@@ -12,6 +12,10 @@ export function generateStructuredData(post: Post, siteUrl: string) {
     ...(author.socialLink && { url: author.socialLink }),
   })) || []
 
+  const postSlug = typeof post.slug === 'object' && post.slug?.current 
+    ? post.slug.current 
+    : (typeof post.slug === 'string' ? post.slug : '')
+
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -28,10 +32,14 @@ export function generateStructuredData(post: Post, siteUrl: string) {
         '@type': 'ImageObject',
         url: `${siteUrl}/favicon.svg`,
       },
+      url: siteUrl,
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `${siteUrl}/blog/${typeof post.slug === 'object' ? post.slug.current : post.slug}`,
+      '@id': `${siteUrl}/blog/${postSlug}`,
     },
+    url: `${siteUrl}/blog/${postSlug}`,
+    articleSection: 'Blog',
+    keywords: 'voice analysis, communication, speech patterns, personal development',
   }
 }

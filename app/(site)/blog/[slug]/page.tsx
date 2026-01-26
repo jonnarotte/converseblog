@@ -1,27 +1,42 @@
 import { notFound } from "next/navigation"
-import { getAllPostSlugs, getPostBySlug, PortableText, urlFor } from "@/lib/sanity"
+import { getAllPosts, getAllPostSlugs, getPostBySlug, PortableText, urlFor } from "@/lib/sanity"
 import { portableTextComponents } from "@/components/PortableTextComponents"
 import { generateStructuredData } from "./structured-data"
+import { calculateReadingTime, formatDate } from "@/lib/utils"
+import ShareButtons from "@/components/ShareButtons"
+import Breadcrumbs from "@/components/Breadcrumbs"
+import RelatedPosts from "@/components/RelatedPosts"
 import type { Metadata } from 'next'
 
 export async function generateStaticParams() {
   try {
     const slugs = await getAllPostSlugs()
-    return slugs
-      .filter((item) => {
-        if (!item.slug) return false
-        if (typeof item.slug === 'object') {
-          return item.slug.current != null && item.slug.current.trim() !== ''
+    const validSlugs: { slug: string }[] = []
+    
+    for (const item of slugs) {
+      if (!item) continue
+      
+      // Extract slug value - handle both string and object formats
+      let slugValue: string | null = null
+      
+      if (item.slug) {
+        if (typeof item.slug === 'string') {
+          slugValue = item.slug
+        } else if (typeof item.slug === 'object' && item.slug !== null && 'current' in item.slug) {
+          const slugObj = item.slug as { current?: string | null }
+          if (slugObj.current && typeof slugObj.current === 'string') {
+            slugValue = slugObj.current
+          }
         }
-        return item.slug.trim() !== ''
-      })
-      .map((item) => {
-        // Handle both string and object slug formats
-        const slug = typeof item.slug === 'object' 
-          ? (item.slug?.current || '') 
-          : (item.slug || '')
-        return { slug }
-      })
+      }
+      
+      // Only add if we have a valid non-empty slug
+      if (slugValue && slugValue.trim() !== '') {
+        validSlugs.push({ slug: slugValue })
+      }
+    }
+    
+    return validSlugs
   } catch (error) {
     console.error('Error generating static params:', error)
     return []
@@ -51,11 +66,14 @@ export async function generateMetadata({
     ? urlFor(post.coverImage).width(1200).height(630).url() 
     : `${siteUrl}/og-image.png`
 
-  const postSlug = typeof post.slug === 'object' ? post.slug.current : post.slug
+  const postSlug = typeof post.slug === 'object' && post.slug?.current 
+    ? post.slug.current 
+    : (typeof post.slug === 'string' ? post.slug : '')
 
   return {
     title: post.title,
     description: post.excerpt || `Read ${post.title} on Converze blog`,
+    keywords: ['voice analysis', 'communication', 'speech patterns', 'personal development'],
     authors: post.authors?.map(author => ({ name: author.name })) || [],
     alternates: {
       canonical: `${siteUrl}/blog/${postSlug}`,
@@ -65,8 +83,10 @@ export async function generateMetadata({
       description: post.excerpt || `Read ${post.title} on Converze blog`,
       type: 'article',
       publishedTime: post.publishedAt,
+      modifiedTime: post.publishedAt,
       authors: post.authors?.map(author => author.name) || [],
       url: `${siteUrl}/blog/${postSlug}`,
+      siteName: 'Converze',
       images: [
         {
           url: coverImageUrl,
@@ -81,6 +101,12 @@ export async function generateMetadata({
       title: post.title,
       description: post.excerpt || `Read ${post.title} on Converze blog`,
       images: [coverImageUrl],
+      creator: '@converze',
+    },
+    other: {
+      'article:published_time': post.publishedAt,
+      'article:modified_time': post.publishedAt,
+      'article:author': post.authors?.map(author => author.name).join(', ') || '',
     },
   }
 }
@@ -97,6 +123,12 @@ export default async function BlogPost({
     notFound()
   }
 
+  // Get all posts for related posts
+  const allPosts = await getAllPosts()
+  
+  // Calculate reading time
+  const readingTime = post.content ? calculateReadingTime(post.content) : 1
+
   // Handle cover image - check if it has asset data, don't constrain dimensions
   const coverImageUrl = post.coverImage?.asset 
     ? urlFor(post.coverImage).url() 
@@ -108,13 +140,53 @@ export default async function BlogPost({
   const isCoverVertical = coverAspectRatio < 1
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const postSlug = typeof post.slug === 'object' && post.slug?.current 
+    ? post.slug.current 
+    : (typeof post.slug === 'string' ? post.slug : '')
+  
+  // Generate structured data with breadcrumbs
   const structuredData = generateStructuredData(post, siteUrl)
+  const breadcrumbData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: siteUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Blog',
+        item: `${siteUrl}/blog`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: post.title,
+        item: `${siteUrl}/blog/${postSlug}`,
+      },
+    ],
+  }
 
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
+      />
+      <Breadcrumbs
+        items={[
+          { label: 'Home', href: '/' },
+          { label: 'Blog', href: '/blog' },
+          { label: post.title },
+        ]}
       />
       <article className="max-w-3xl mx-auto space-y-8 w-full overflow-x-hidden" itemScope itemType="https://schema.org/BlogPosting">
       <div className="space-y-4">
@@ -127,13 +199,11 @@ export default async function BlogPost({
         <div className="flex flex-wrap items-center gap-4 text-sm">
           {post.publishedAt && (
             <time className="text-gray-500 dark:text-gray-400" dateTime={post.publishedAt} itemProp="datePublished">
-              {new Date(post.publishedAt).toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
-              })}
+              {formatDate(post.publishedAt)}
             </time>
           )}
+          <span className="text-gray-500 dark:text-gray-400">•</span>
+          <span className="text-gray-500 dark:text-gray-400">{readingTime} min read</span>
           {post.authors && post.authors.length > 0 && (
             <div className="flex items-center gap-3">
               <span className="text-gray-500 dark:text-gray-400">By</span>
@@ -210,7 +280,17 @@ export default async function BlogPost({
           <PortableText value={post.content} components={portableTextComponents} />
         </div>
       )}
+
+      <div className="pt-8 border-t border-gray-300 dark:border-gray-700">
+        <ShareButtons
+          title={post.title}
+          url={`/blog/${postSlug}`}
+          description={post.excerpt}
+        />
+      </div>
       </article>
+
+      <RelatedPosts posts={allPosts} currentPostId={post._id} />
     </>
   )
 }

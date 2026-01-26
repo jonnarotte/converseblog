@@ -70,6 +70,13 @@ export const metadata: Metadata = {
     // yandex: 'your-yandex-verification-code',
     // yahoo: 'your-yahoo-verification-code',
   },
+  alternates: {
+    types: {
+      'application/rss+xml': [
+        { url: `${siteUrl}/feed.xml`, title: 'Converze Blog RSS Feed' },
+      ],
+    },
+  },
 }
 
 export default function RootLayout({
@@ -79,6 +86,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className="overflow-x-hidden">
+      <head>
+        {/* Preconnect to external domains for performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://cdn.sanity.io" />
+        <link rel="dns-prefetch" href="https://cdn.sanity.io" />
+        {/* RSS Feed */}
+        <link rel="alternate" type="application/rss+xml" title="Converze Blog RSS Feed" href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/feed.xml`} />
+      </head>
       <body className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-colors overflow-x-hidden w-full">
         <script
           dangerouslySetInnerHTML={{

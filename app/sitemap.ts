@@ -31,17 +31,40 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // Get all blog post slugs (with error handling)
+  // Get all blog posts with full data for better lastModified dates
   try {
-    const slugs = await getAllPostSlugs()
-    const blogPosts: MetadataRoute.Sitemap = slugs
-      .filter((item) => item.slug != null && item.slug.trim() !== '')
-      .map((item) => ({
-        url: `${siteUrl}/blog/${item.slug}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly' as const,
-        priority: 0.7,
-      }))
+    const { getAllPosts } = await import('@/lib/sanity')
+    const posts = await getAllPosts()
+    const blogPosts: MetadataRoute.Sitemap = []
+    
+    for (const post of posts) {
+      if (!post) continue
+      
+      // Extract slug value - handle both string and object formats
+      let slugValue: string | null = null
+      
+      if (post.slug) {
+        if (typeof post.slug === 'string') {
+          slugValue = post.slug
+        } else if (typeof post.slug === 'object' && post.slug !== null && 'current' in post.slug) {
+          const slugObj = post.slug as { current?: string | null }
+          if (slugObj.current && typeof slugObj.current === 'string') {
+            slugValue = slugObj.current
+          }
+        }
+      }
+      
+      // Only add if we have a valid non-empty slug
+      if (slugValue && slugValue.trim() !== '') {
+        blogPosts.push({
+          url: `${siteUrl}/blog/${slugValue}`,
+          lastModified: post.publishedAt ? new Date(post.publishedAt) : new Date(),
+          changeFrequency: 'weekly' as const,
+          priority: 0.7,
+        })
+      }
+    }
+    
     return [...routes, ...blogPosts]
   } catch (error) {
     console.error('Error generating sitemap:', error)
