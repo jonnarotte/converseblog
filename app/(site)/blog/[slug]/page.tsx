@@ -8,11 +8,19 @@ export async function generateStaticParams() {
   try {
     const slugs = await getAllPostSlugs()
     return slugs
-      .filter((item) => item.slug != null && item.slug.trim() !== '')
+      .filter((item) => {
+        if (!item.slug) return false
+        if (typeof item.slug === 'object') {
+          return item.slug.current != null && item.slug.current.trim() !== ''
+        }
+        return item.slug.trim() !== ''
+      })
       .map((item) => {
         // Handle both string and object slug formats
-        const slug = typeof item.slug === 'object' ? item.slug.current : item.slug
-        return { slug: slug || '' }
+        const slug = typeof item.slug === 'object' 
+          ? (item.slug?.current || '') 
+          : (item.slug || '')
+        return { slug }
       })
   } catch (error) {
     console.error('Error generating static params:', error)
