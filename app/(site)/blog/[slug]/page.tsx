@@ -5,15 +5,24 @@ import { generateStructuredData } from "./structured-data"
 import type { Metadata } from 'next'
 
 export async function generateStaticParams() {
-  const slugs = await getAllPostSlugs()
-  return slugs.map((item) => ({
-    slug: item.slug,
-  }))
+  try {
+    const slugs = await getAllPostSlugs()
+    return slugs
+      .filter((item) => item.slug != null && item.slug.trim() !== '')
+      .map((item) => {
+        // Handle both string and object slug formats
+        const slug = typeof item.slug === 'object' ? item.slug.current : item.slug
+        return { slug: slug || '' }
+      })
+  } catch (error) {
+    console.error('Error generating static params:', error)
+    return []
+  }
 }
 
 // Enable ISR for better performance
 export const revalidate = 60 // Revalidate every 60 seconds
-export const dynamicParams = false // Only allow pre-generated slugs
+export const dynamicParams = true // Allow dynamic generation for new posts
 
 export async function generateMetadata({
   params,
