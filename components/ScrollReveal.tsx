@@ -7,6 +7,7 @@ interface ScrollRevealProps {
   className?: string
   delay?: number
   direction?: 'up' | 'down' | 'left' | 'right'
+  style?: React.CSSProperties
 }
 
 export default function ScrollReveal({
@@ -14,6 +15,7 @@ export default function ScrollReveal({
   className = '',
   delay = 0,
   direction = 'up',
+  style,
 }: ScrollRevealProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
@@ -72,6 +74,9 @@ export default function ScrollReveal({
         transition: 'opacity 0.6s ease-out, transform 0.6s ease-out',
         overflow: 'visible',
         maxHeight: 'none',
+        height: 'auto',
+        width: '100%',
+        ...style,
       }}
     >
       {children}

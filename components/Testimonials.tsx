@@ -40,7 +40,7 @@ export default function Testimonials() {
   const current = testimonials[currentIndex]
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6" style={{ overflow: 'visible', maxHeight: 'none' }}>
       <h2 className="text-3xl font-medium text-center">What People Are Saying</h2>
       
       <div className="max-w-2xl mx-auto">

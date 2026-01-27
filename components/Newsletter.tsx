@@ -61,7 +61,7 @@ export default function Newsletter({ source = 'other' }: NewsletterProps) {
   }
 
   return (
-    <div className="border border-gray-300 dark:border-gray-700 rounded-lg p-6 bg-gray-50 dark:bg-gray-900">
+    <div className="border border-gray-300 dark:border-gray-700 rounded-lg p-6 bg-gray-50 dark:bg-gray-900" style={{ overflow: 'visible', maxHeight: 'none' }}>
       <h3 className="font-medium mb-2">Subscribe to our newsletter</h3>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
         Get notified when we publish new blog posts.

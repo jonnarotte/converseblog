@@ -105,34 +105,27 @@
   }
 
   /* CRITICAL: Only body/html can scroll - prevent ALL nested scrollbars */
-  /* Override Tailwind overflow classes that create scrollbars */
-  section:not([data-sanity]):not([data-ui]), 
-  div:not([class*="absolute"]):not([class*="fixed"]):not([data-sanity]):not([data-ui]):not([class*="overflow-auto"]):not([class*="overflow-scroll"]), 
-  main:not([data-sanity]):not([data-ui]), 
-  article:not([data-sanity]):not([data-ui]), 
-  aside:not([data-sanity]):not([data-ui]), 
-  header:not([data-sanity]):not([data-ui]), 
-  footer:not([data-sanity]):not([data-ui]) {
+  /* Target common container elements that might create scrollbars */
+  /* EXCLUDE Studio completely from these rules - use :not() to exclude any element containing Studio */
+  section:not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])), 
+  div:not([class*="grid"]):not([class*="absolute"]):not([class*="fixed"]):not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])),
+  main:not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])), 
+  article:not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])), 
+  aside:not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])),
+  header:not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])),
+  footer:not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])) {
     overflow-x: hidden !important;
     overflow-y: visible !important;
     max-height: none !important;
-    height: auto !important;
   }
   
-  /* Override Tailwind overflow-hidden on cards/sections - only allow for image containers */
-  section[class*="overflow-hidden"],
-  div[class*="overflow-hidden"]:not([class*="aspect"]):not([class*="bg-gray-100"]):not([class*="bg-gray-900"]) {
+  /* Grid containers and their direct children should allow flex layout */
+  [class*="grid"]:not([data-sanity]):not([data-ui]):not(:has([data-sanity])):not(:has([data-ui])),
+  [class*="grid"]:not([data-sanity]):not([data-ui]):not(:has([data-sanity])):not(:has([data-ui])) > * {
     overflow: visible !important;
   }
   
-  /* Keep overflow-hidden ONLY for image aspect containers */
-  [class*="aspect-video"][class*="overflow-hidden"],
-  [class*="aspect-ratio"][class*="overflow-hidden"],
-  div[class*="aspect-video"][class*="overflow-hidden"][class*="bg-gray"] {
-    overflow: hidden !important;
-  }
-  
-  /* Only body can scroll */
+  /* Only body/html can scroll */
   html {
     overflow-y: scroll !important;
     overflow-x: hidden !important;
@@ -146,6 +139,30 @@
   /* Exception: Only absolute/fixed popups can scroll (like search dropdown) */
   [class*="absolute"][class*="z-50"][class*="max-h"] {
     overflow-y: auto !important;
+  }
+  
+  /* Exception: Keep overflow-hidden ONLY for image aspect containers */
+  [class*="aspect-video"][class*="overflow-hidden"],
+  [class*="aspect-ratio"][class*="overflow-hidden"],
+  div[class*="aspect-video"][class*="overflow-hidden"][class*="bg-gray"] {
+    overflow: hidden !important;
+  }
+  
+  /* Exception: Studio elements */
+  [data-sanity] *,
+  [data-ui] * {
+    overflow: visible !important;
+  }
+  
+  /* Grid items should stretch to equal height - but don't break grid layout */
+  .grid {
+    align-items: stretch !important;
+  }
+  
+  .grid > * {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
   
   /* Mobile-specific: hide scrollbar, ensure no nested scrollbars */
