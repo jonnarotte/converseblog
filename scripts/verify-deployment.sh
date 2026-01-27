@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ✅ Verify Deployment Configuration
-# Checks if everything is ready for deployment
+# Checks if GitHub Actions secrets are configured correctly
 
 set -e
 
@@ -17,33 +17,17 @@ echo ""
 
 ERRORS=0
 
-# Check config file
-if [ -f ".deploy-config" ]; then
-    source .deploy-config
-    echo -e "${GREEN}✓ Configuration file found${NC}"
-    echo "  VM: $VM_USER@$VM_IP"
-    echo "  App Dir: $VM_APP_DIR"
-    echo "  Service: $SERVICE_NAME"
-    echo "  Domain: ${DOMAIN:-not set}"
-else
-    echo -e "${RED}❌ Configuration file not found${NC}"
-    ERRORS=$((ERRORS + 1))
-fi
-echo ""
-
-# Check .env.local
+# Check .env.local (for local development)
 if [ -f ".env.local" ]; then
     echo -e "${GREEN}✓ .env.local found${NC}"
     source .env.local
     if [ -z "${NEXT_PUBLIC_SANITY_PROJECT_ID:-}" ]; then
-        echo -e "${RED}❌ NEXT_PUBLIC_SANITY_PROJECT_ID not set${NC}"
-        ERRORS=$((ERRORS + 1))
+        echo -e "${YELLOW}⚠️  NEXT_PUBLIC_SANITY_PROJECT_ID not set in .env.local${NC}"
     else
         echo -e "${GREEN}✓ NEXT_PUBLIC_SANITY_PROJECT_ID is set${NC}"
     fi
 else
-    echo -e "${RED}❌ .env.local not found${NC}"
-    ERRORS=$((ERRORS + 1))
+    echo -e "${YELLOW}⚠️  .env.local not found (optional for CI/CD)${NC}"
 fi
 echo ""
 
@@ -51,51 +35,64 @@ echo ""
 if command -v node &> /dev/null; then
     NODE_VERSION=$(node --version)
     echo -e "${GREEN}✓ Node.js: $NODE_VERSION${NC}"
+    
+    # Check version
+    NODE_MAJOR=$(node --version | cut -d. -f1 | sed 's/v//')
+    if [ "$NODE_MAJOR" -lt 18 ]; then
+        echo -e "${RED}❌ Node.js 18+ required (found $NODE_VERSION)${NC}"
+        ERRORS=$((ERRORS + 1))
+    fi
 else
     echo -e "${RED}❌ Node.js not installed${NC}"
     ERRORS=$((ERRORS + 1))
 fi
 echo ""
 
-# Check SSH connection
-if [ -f ".deploy-config" ]; then
-    source .deploy-config
-    SSH_KEY="${SSH_KEY/#\~/$HOME}"
-    VM="$VM_USER@$VM_IP"
-    
-    echo -e "${BLUE}Testing SSH connection...${NC}"
-    if [ -f "$SSH_KEY" ]; then
-        if ssh -i "$SSH_KEY" -o ConnectTimeout=5 -o BatchMode=yes "$VM" "echo 'OK'" > /dev/null 2>&1; then
-            echo -e "${GREEN}✓ SSH connection successful${NC}"
-        else
-            echo -e "${YELLOW}⚠️  SSH connection failed${NC}"
-            echo -e "${YELLOW}   Test manually: ssh -i $SSH_KEY $VM${NC}"
-            ERRORS=$((ERRORS + 1))
-        fi
-    else
-        echo -e "${YELLOW}⚠️  SSH key not found: $SSH_KEY${NC}"
-        ERRORS=$((ERRORS + 1))
-    fi
-fi
-echo ""
-
-# Check scripts
-SCRIPTS=("stage1-build.sh" "stage2-transfer.sh" "stage3-deploy.sh" "deploy-all.sh")
-for script in "${SCRIPTS[@]}"; do
-    if [ -f "scripts/$script" ] && [ -x "scripts/$script" ]; then
+# Check required scripts
+REQUIRED_SCRIPTS=("stage3-deploy.sh" "copy-static.js")
+for script in "${REQUIRED_SCRIPTS[@]}"; do
+    if [ -f "scripts/$script" ]; then
         echo -e "${GREEN}✓ scripts/$script${NC}"
     else
-        echo -e "${RED}❌ scripts/$script missing or not executable${NC}"
+        echo -e "${RED}❌ scripts/$script missing${NC}"
         ERRORS=$((ERRORS + 1))
     fi
 done
 echo ""
 
+# Check GitHub workflow
+if [ -f ".github/workflows/deploy.yml" ]; then
+    echo -e "${GREEN}✓ GitHub Actions workflow found${NC}"
+else
+    echo -e "${RED}❌ .github/workflows/deploy.yml missing${NC}"
+    ERRORS=$((ERRORS + 1))
+fi
+echo ""
+
 # Summary
+echo -e "${BLUE}📋 GitHub Secrets Required:${NC}"
+echo "  - VM_IP"
+echo "  - VM_USER"
+echo "  - VM_SSH_KEY"
+echo "  - NEXT_PUBLIC_SANITY_PROJECT_ID"
+echo "  - SANITY_API_TOKEN"
+echo ""
+echo -e "${BLUE}📋 Optional GitHub Secrets:${NC}"
+echo "  - NEXT_PUBLIC_SANITY_DATASET (defaults to 'production')"
+echo "  - NEXT_PUBLIC_SITE_URL"
+echo "  - NEXT_PUBLIC_GA_ID"
+echo "  - RESEND_API_KEY"
+echo "  - EMAIL_FROM"
+echo "  - EMAIL_API_KEY"
+echo "  - WEBHOOK_SECRET"
+echo ""
+
 if [ $ERRORS -eq 0 ]; then
-    echo -e "${GREEN}✅ All checks passed! Ready to deploy.${NC}"
+    echo -e "${GREEN}✅ All checks passed!${NC}"
     echo ""
-    echo -e "${YELLOW}Run: ./scripts/deploy-all.sh${NC}"
+    echo -e "${YELLOW}Next steps:${NC}"
+    echo "  1. Configure GitHub Secrets (see DEPLOYMENT.md)"
+    echo "  2. Push to main/master branch to trigger deployment"
     exit 0
 else
     echo -e "${RED}❌ Found $ERRORS error(s). Please fix before deploying.${NC}"

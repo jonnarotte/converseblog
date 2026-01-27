@@ -1,81 +1,162 @@
 # Deployment Guide
 
-3-stage deployment system for GCloud VM. **No source code on VM** - only build artifacts.
+This project uses **GitHub Actions CI/CD** with a safe branch-based workflow. Development happens in `develop`, and production deployments happen automatically when code is merged to `main`.
 
-## Overview
+## Branch Strategy
 
-**3 Stages:**
-1. **Local Build** - Build on your machine
-2. **Transfer** - Upload build to VM (no source code)
-3. **VM Deploy** - Run application on VM
+### `develop` Branch
+- **Purpose**: Development and testing
+- **On Push**: Builds and verifies the application
+- **No Deployment**: Never deploys to production
+- **Use Case**: Daily development work, feature branches
 
-**Benefits:**
-- ✅ Fast deployments (~100MB vs 500MB+)
-- ✅ Secure (no source code on VM)
-- ✅ Reliable (automatic backups & rollback)
-- ✅ Simple (one command)
+### `main` Branch
+- **Purpose**: Production-ready code
+- **On Push**: Builds AND deploys to production server
+- **Automatic Deployment**: Every merge to `main` triggers production deployment
+- **Use Case**: Stable releases, production updates
 
-## Quick Start
+## Workflow
 
-### One-Time Setup
-
-Your deployment is already configured! Check `.deploy-config`:
+### 1. Develop in `develop` Branch
 
 ```bash
-VM_USER="rakshithgoudbrg"
-VM_IP="34.173.15.101"
-VM_APP_DIR="/var/www/converseblog"
-SERVICE_NAME="converseblog"
-PORT="3000"
-SSH_KEY="~/.ssh/google_compute_engine"
-DOMAIN="converze.org"
+git checkout develop
+# Make your changes
+git add .
+git commit -m "Add new feature"
+git push origin develop
 ```
 
-### Deploy
+**What happens:**
+- ✅ GitHub Actions builds the application
+- ✅ Verifies build artifacts
+- ✅ Checks for chunks and static files
+- ❌ **No deployment** to production
 
-**One Command:**
+### 2. Create Pull Request
+
+When ready to deploy:
+
 ```bash
-./scripts/deploy-all.sh
+# Create PR from develop → main
+# Review changes in GitHub
+# Get team approval
 ```
 
-**Or Step by Step:**
+**What happens:**
+- ✅ GitHub Actions builds the application
+- ✅ Verifies everything works
+- ❌ **No deployment** (PRs never deploy)
+
+### 3. Merge to `main`
+
+Once PR is approved and merged:
+
 ```bash
-# Stage 1: Build locally
-./scripts/stage1-build.sh
-
-# Stage 2: Transfer to VM
-./scripts/stage2-transfer.sh
-
-# Stage 3: Deploy on VM (runs automatically)
+# Merge PR in GitHub UI
+# Or merge locally:
+git checkout main
+git merge develop
+git push origin main
 ```
 
-## What Each Stage Does
+**What happens:**
+- ✅ GitHub Actions builds the application
+- ✅ Creates deployment package
+- ✅ **Deploys to production server**
+- ✅ Verifies deployment success
+- ✅ Health checks
 
-### Stage 1: Local Build
-- Installs dependencies
-- Builds with `npx next build`
-- Verifies chunks (fixes Studio issues)
-- Creates `deploy.tar.gz` (~100MB)
+## Setup
 
-### Stage 2: Transfer
-- Tests SSH connection
-- Creates backup on VM
-- Uploads tarball
-- Extracts on VM
-- Verifies files
+### 1. Configure GitHub Secrets
 
-### Stage 3: VM Deploy
-- Installs Node.js (if needed)
-- Creates systemd service
-- Configures Nginx for converze.org
-- Starts application
-- Health checks
+Go to your GitHub repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
 
-## What's on VM?
+Add these required secrets:
+
+#### Required Secrets:
+```
+VM_IP=your-server-ip-address
+VM_USER=your-ssh-username
+VM_SSH_KEY=-----BEGIN OPENSSH PRIVATE KEY-----
+(your SSH private key)
+-----END OPENSSH PRIVATE KEY-----
+NEXT_PUBLIC_SANITY_PROJECT_ID=your-project-id
+SANITY_API_TOKEN=your-sanity-api-token
+```
+
+#### Optional Secrets (recommended):
+```
+NEXT_PUBLIC_SANITY_DATASET=production
+NEXT_PUBLIC_SITE_URL=https://yourdomain.com
+NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
+RESEND_API_KEY=re_xxxxxxxxxxxxx
+EMAIL_FROM=noreply@yourdomain.com
+EMAIL_API_KEY=your-secret-api-key
+WEBHOOK_SECRET=your-webhook-secret
+```
+
+### 2. Get Your SSH Key
+
+Copy your SSH private key:
+```bash
+cat ~/.ssh/your-ssh-key
+```
+
+Copy the entire output (including `-----BEGIN` and `-----END` lines) and paste it as `VM_SSH_KEY` secret.
+
+## Usage Examples
+
+### Daily Development
+
+```bash
+# Work on develop branch
+git checkout develop
+git pull origin develop
+
+# Make changes
+# ... edit files ...
+
+# Commit and push
+git add .
+git commit -m "Add new feature"
+git push origin develop
+
+# ✅ Build runs automatically, no deployment
+```
+
+### Deploy to Production
+
+```bash
+# Option 1: Via Pull Request (Recommended)
+# 1. Create PR: develop → main in GitHub
+# 2. Review and approve
+# 3. Merge PR
+# ✅ Automatic deployment happens
+
+# Option 2: Direct merge (if needed)
+git checkout main
+git merge develop
+git push origin main
+# ✅ Automatic deployment happens
+```
+
+### Manual Trigger
+
+You can also trigger deployment manually:
+1. Go to **Actions** tab in GitHub
+2. Select **CI/CD Pipeline** workflow
+3. Click **Run workflow**
+4. Select branch (usually `main`)
+5. Click **Run workflow**
+
+## What Gets Deployed
 
 **ONLY:**
 - `.next/standalone/` directory (~100MB)
-- `.env.local` file
+- `.env.local` file (created from secrets)
 - Deployment scripts
 
 **NOT:**
@@ -84,105 +165,80 @@ DOMAIN="converze.org"
 - ❌ Git repository
 - ❌ Development files
 
-## Requirements
+## Server Requirements
 
-### Local Machine
-- Node.js 18+
-- SSH access to VM
-- `.env.local` configured
-
-### VM
-- Node.js 18+ (installed automatically)
-- Nginx (installed automatically)
-- SSH access
+The server must have:
+- Node.js 18+ (installed automatically by deployment script)
+- Nginx (installed automatically by deployment script)
+- SSH access configured
+- Sudo access for deployment user
 
 ## Management Commands
 
+After deployment, you can manage the service:
+
 ```bash
 # Check status
-ssh -i ~/.ssh/google_compute_engine rakshithgoudbrg@34.173.15.101 \
+ssh -i ~/.ssh/your-key user@your-server \
   'sudo systemctl status converseblog'
 
 # View logs
-ssh -i ~/.ssh/google_compute_engine rakshithgoudbrg@34.173.15.101 \
+ssh -i ~/.ssh/your-key user@your-server \
   'sudo journalctl -u converseblog -f'
 
 # Restart
-ssh -i ~/.ssh/google_compute_engine rakshithgoudbrg@34.173.15.101 \
+ssh -i ~/.ssh/your-key user@your-server \
   'sudo systemctl restart converseblog'
 ```
 
 ## Troubleshooting
 
-### SSH Connection Failed
-```bash
-# Test connection
-ssh -i ~/.ssh/google_compute_engine rakshithgoudbrg@34.173.15.101 "echo 'OK'"
+### Build Fails on `develop`
 
-# Check key permissions
-chmod 600 ~/.ssh/google_compute_engine
-```
+1. Check **Actions** tab for error messages
+2. Verify `.env.local` has correct values locally
+3. Check if dependencies changed
+4. Review build logs in GitHub Actions
 
-### Build Fails
-- Check `.env.local` exists
-- Verify Node.js: `node --version` (needs 18+)
-- Check disk space
+### Deployment Fails on `main`
 
-### Studio Not Loading (Missing Chunks)
-The deployment scripts automatically copy all chunks. If issues persist:
-
-```bash
-# On VM, verify chunks exist
-ssh -i ~/.ssh/google_compute_engine rakshithgoudbrg@34.173.15.101 \
-  'ls -la /var/www/converseblog/standalone/.next/static/chunks/*.js | wc -l'
-```
+1. Check **Actions** → **Deploy** step logs
+2. Verify all required secrets are set
+3. Check SSH key format (must include BEGIN/END lines)
+4. Verify server has disk space: `df -h`
+5. Check service logs: `sudo journalctl -u converseblog -n 50`
 
 ### Service Won't Start
+
 ```bash
 # Check logs
-ssh -i ~/.ssh/google_compute_engine rakshithgoudbrg@34.173.15.101 \
+ssh -i ~/.ssh/your-key user@your-server \
   'sudo journalctl -u converseblog -n 50'
 ```
 
-## After Deployment
-
-Your site will be available at:
-- **HTTP:** http://converze.org
-- **Studio:** http://converze.org/studio
-
 ## Security Features
 
-- ✅ Automatic backups before deployment
-- ✅ Health checks before/after
-- ✅ Automatic rollback on failure
-- ✅ Chunk verification
-- ✅ No source code on VM
+- ✅ **Safe branch strategy** - `develop` never deploys
+- ✅ **PR protection** - Pull requests never deploy
+- ✅ **Automatic backups** before deployment
+- ✅ **Health checks** after deployment
+- ✅ **Chunk verification** (ensures Studio works)
+- ✅ **No source code on server**
+- ✅ **Secrets stored securely** in GitHub
 
-## Scripts Reference
+## Benefits
 
-- `scripts/stage1-build.sh` - Local build
-- `scripts/stage2-transfer.sh` - Transfer to VM
-- `scripts/stage3-deploy.sh` - Deploy on VM
-- `scripts/deploy-all.sh` - Run all stages
-- `scripts/verify-deployment.sh` - Verify configuration
-- `scripts/vm-cleanup.sh` - Cleanup script (runs on VM)
-- `scripts/run-vm-cleanup.sh` - Run cleanup remotely
+| Feature | develop Branch | main Branch |
+|---------|----------------|-------------|
+| Build | ✅ Yes | ✅ Yes |
+| Test | ✅ Yes | ✅ Yes |
+| Deploy | ❌ No | ✅ Yes |
+| Safe for experiments | ✅ Yes | ❌ No |
 
-## VM Cleanup & Optimization
+## Notes
 
-To clean up unnecessary files and optimize your VM:
-
-```bash
-./scripts/run-vm-cleanup.sh
-```
-
-This will:
-- Remove old backups (keeps last 2)
-- Clean old deploy tarballs
-- Remove temporary files
-- Clean npm and system caches
-- Remove old log files (keeps last 7 days)
-- Remove source code (not needed with standalone builds)
-- Optimize disk and memory usage
-
-**Note:** Some operations require sudo. You'll be prompted for your password.
+- **Never push directly to `main`** - Always use PRs
+- Pull requests will build but not deploy
+- Artifacts are kept for 7 days
+- Each deployment creates a backup automatically
+- The workflow uses `stage3-deploy.sh` script on the server for final deployment steps

@@ -96,9 +96,9 @@ pids
 tmp/
 temp/
 
-# Deployment files (keep deploy.sh and docs, but ignore server-specific configs)
-# Keep: deploy.sh, DEPLOY_QUICK.md, DEPLOYMENT.md
-# Ignore: server configs if any
+# Deployment files (ignore server-specific configs)
+# Keep: DEPLOYMENT.md and deployment scripts
+# Ignore: server configs and deployment artifacts
 .deploy-config
 .deploy/
 deploy.tar.gz

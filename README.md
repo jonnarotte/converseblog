@@ -52,7 +52,7 @@ Visit [http://localhost:3000](http://localhost:3000)
 ## Documentation
 
 - **[SETUP.md](./SETUP.md)** - Complete setup and configuration guide
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - 3-stage deployment to GCloud VM
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - CI/CD deployment guide
 - **[FEATURES.md](./FEATURES.md)** - All features and capabilities
 - **[EMAIL.md](./EMAIL.md)** - Newsletter and email setup
 
@@ -86,17 +86,28 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 ## Deployment
 
-The project uses a **3-stage deployment system**:
+The project uses **GitHub Actions CI/CD** with a safe branch-based workflow:
 
-1. **Local Build** - Build on your machine
-2. **Transfer** - Upload build to VM (no source code)
-3. **VM Deploy** - Run application on VM
+- **`develop` branch**: Builds and tests only (no deployment)
+- **`main` branch**: Builds and deploys to production automatically
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete guide.
+### Workflow
 
-**Quick Deploy:**
+1. **Develop in `develop`** → Push code, builds automatically
+2. **Create PR** → `develop` → `main` for review
+3. **Merge to `main`** → Automatic production deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete setup guide.
+
+**Quick start:**
 ```bash
-./scripts/deploy-all.sh
+# Develop
+git checkout develop
+git push origin develop  # ✅ Builds, no deployment
+
+# Deploy to production
+# Create PR: develop → main, then merge
+# ✅ Automatic deployment happens
 ```
 
 ## License
