@@ -5,16 +5,13 @@ Complete guide for testing the Converze Blog application locally before pushing 
 ## Quick Start
 
 ```bash
-# Install dependencies (includes test tools)
-npm install
+# Run unit & integration tests (default)
+npm test
 
-# Run all tests
-npm run test:all
+# Before pushing - runs type check + tests + build
+npm run test:pre-push
 
-# Run tests in watch mode (for development)
-npm run test:local
-
-# Run E2E tests
+# E2E tests (requires Playwright setup - run separately)
 npm run test:e2e
 ```
 
@@ -60,11 +57,14 @@ npm test -- __tests__/api/
 - Sanity integration
 - Authentication
 
-### 3. E2E Tests (Playwright)
+### 3. E2E Tests (Playwright) - Optional
 
-Tests complete user flows in a real browser.
+E2E tests are excluded from default `npm test` and require separate setup.
 
 ```bash
+# Install Playwright browsers first
+npx playwright install
+
 # Run E2E tests (headless)
 npm run test:e2e
 
@@ -75,12 +75,7 @@ npm run test:e2e:ui
 npm run test:e2e:headed
 ```
 
-**What's tested:**
-- Page navigation
-- Form submissions
-- Search functionality
-- Theme switching
-- Sanity Studio access
+**Note:** E2E tests are optional and excluded from pre-push checks. Run manually when needed.
 
 ## Local Testing Workflow
 
@@ -272,6 +267,30 @@ export const myService = {
 ```
 
 ## Troubleshooting
+
+### EMFILE: Too Many Open Files (macOS)
+
+If `npm run test:watch` fails with "EMFILE: too many open files":
+
+**Quick Fix:**
+```bash
+# Increase limit for current session
+ulimit -n 4096
+npm run test:watch
+```
+
+**Permanent Fix:**
+```bash
+# Run the fix script
+./scripts/fix-file-watchers.sh
+
+# Or manually add to ~/.zshrc:
+echo "ulimit -n 4096" >> ~/.zshrc
+source ~/.zshrc
+```
+
+**Alternative:** Use `npm test` (runs once) instead of watch mode during development.
+
 
 ### Tests fail locally but pass in CI
 

@@ -65,6 +65,7 @@ See [TESTING.md](./TESTING.md) for complete testing guide.
 
 ## Documentation
 
+- **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** ⭐ - **Start here!** Complete guide for developers: setup, architecture, design principles, testing, and adding features
 - **[SETUP.md](./SETUP.md)** - Complete setup and configuration guide
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - CI/CD deployment guide
 - **[TESTING.md](./TESTING.md)** - Complete testing guide for local development

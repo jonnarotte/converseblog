@@ -44,6 +44,9 @@ describe('Email Service', () => {
 
     it('throws error when API key is missing', async () => {
       delete process.env.RESEND_API_KEY
+      
+      // Suppress expected console.error
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
       await expect(
         sendEmail({
@@ -52,6 +55,8 @@ describe('Email Service', () => {
           html: '<p>Test</p>',
         })
       ).rejects.toThrow('Email service not configured')
+      
+      consoleSpy.mockRestore()
     })
 
     it('handles API errors', async () => {
@@ -59,6 +64,9 @@ describe('Email Service', () => {
         ok: false,
         json: async () => ({ message: 'API Error' }),
       })
+      
+      // Suppress expected console.error
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
       await expect(
         sendEmail({
@@ -67,6 +75,8 @@ describe('Email Service', () => {
           html: '<p>Test</p>',
         })
       ).rejects.toThrow('Failed to send email')
+      
+      consoleSpy.mockRestore()
     })
   })
 

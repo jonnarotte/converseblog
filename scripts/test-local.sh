@@ -33,6 +33,7 @@ echo ""
 
 # Step 2: Unit tests
 echo -e "${BLUE}2. Running unit tests...${NC}"
+echo -e "${YELLOW}   Note: Coverage thresholds are set to 20% (minimum)${NC}"
 if npm run test:ci; then
     echo -e "${GREEN}✓ Unit tests passed${NC}"
 else
@@ -52,20 +53,10 @@ fi
 echo ""
 
 # Step 4: E2E tests (optional - can be skipped)
-echo -e "${BLUE}4. Running E2E tests...${NC}"
-echo -e "${YELLOW}   (This requires dev server running)${NC}"
-read -p "Run E2E tests? (y/n) " -n 1 -r
-echo ""
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    if npm run test:e2e; then
-        echo -e "${GREEN}✓ E2E tests passed${NC}"
-    else
-        echo -e "${RED}❌ E2E tests failed${NC}"
-        exit 1
-    fi
-else
-    echo -e "${YELLOW}⏭️  Skipping E2E tests${NC}"
-fi
+echo -e "${BLUE}4. E2E tests...${NC}"
+echo -e "${YELLOW}   E2E tests require dev server running and Playwright browsers installed${NC}"
+echo -e "${YELLOW}   Run manually: npm run test:e2e${NC}"
+echo -e "${YELLOW}   ⏭️  Skipping E2E tests in pre-push check${NC}"
 echo ""
 
 echo -e "${GREEN}✅ All tests passed! Ready to push.${NC}"
