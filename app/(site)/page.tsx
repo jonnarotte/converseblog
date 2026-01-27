@@ -6,7 +6,6 @@ import InteractiveBackground from '@/components/InteractiveBackground'
 import InteractiveCard from '@/components/InteractiveCard'
 import ScrollReveal from '@/components/ScrollReveal'
 import MagneticButton from '@/components/MagneticButton'
-import ComicConEffect from '@/components/ComicConEffect'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
@@ -31,8 +30,6 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <section className="space-y-24 relative w-full overflow-x-hidden">
-      {/* Comic Con style effects */}
-      <ComicConEffect />
       {/* Interactive particle background */}
       <InteractiveBackground />
       
