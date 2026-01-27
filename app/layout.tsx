@@ -24,11 +24,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.svg', type: 'image/svg+xml', sizes: 'any' },
       { url: '/favicon.ico', sizes: 'any' },
       { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
     ],
-    shortcut: '/favicon.svg',
+    shortcut: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
     apple: [
       { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
     ],
@@ -106,6 +108,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://cdn.sanity.io" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+        {/* Favicon - prioritize SVG for modern browsers */}
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         {/* RSS Feed */}
         <link rel="alternate" type="application/rss+xml" title="Converze Blog RSS Feed" href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/feed.xml`} />
         {/* Enhanced SEO */}

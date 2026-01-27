@@ -7,7 +7,21 @@ export default function StudioLayout({
   children: React.ReactNode
 }) {
   return (
-    <div style={{ overflow: 'visible', maxWidth: 'none', width: '100%', height: '100vh' }}>
+    <div 
+      data-sanity="studio-layout"
+      style={{ 
+        overflow: 'visible', 
+        maxWidth: 'none', 
+        width: '100vw', 
+        height: '100vh',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 99999
+      }}
+    >
       {children}
     </div>
   )

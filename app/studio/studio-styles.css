@@ -1,50 +1,75 @@
 /* Studio-specific styles to override global CSS - ONLY affects Studio */
 
-/* CRITICAL: Prevent global overflow rules from affecting Studio */
-/* Only reset overflow for Studio containers, not everything */
-[data-sanity],
-[data-ui] {
+/* CRITICAL: Completely isolate Studio from global CSS */
+/* Hide main page scrollbar when Studio is open */
+html:has([data-sanity="studio-layout"]),
+body:has([data-sanity="studio-layout"]) {
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Studio layout container - full viewport, fixed position */
+[data-sanity="studio-layout"] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
   overflow: visible !important;
-  max-width: 100% !important;
-  width: 100% !important;
-  height: 100% !important;
+  z-index: 99999 !important;
+  background: transparent !important;
+}
+
+/* Prevent global overflow rules from affecting Studio */
+[data-sanity],
+[data-ui],
+[data-sanity="studio-layout"] {
+  overflow: visible !important;
+  max-width: none !important;
+  max-height: none !important;
 }
 
 /* Ensure Studio has proper background - don't force white/black, let Studio handle it */
 body:has([data-sanity]),
-body:has([data-ui]) {
+body:has([data-ui]),
+body:has([data-sanity="studio-layout"]) {
   background: transparent !important;
 }
 
 /* Reset Studio elements to default sizes - target Studio container specifically */
 body:has([data-sanity]) [data-sanity] *,
 body:has([data-ui]) [data-ui] *,
+body:has([data-sanity="studio-layout"]) [data-sanity="studio-layout"] *,
 [data-sanity] *,
-[data-ui] * {
+[data-ui] *,
+[data-sanity="studio-layout"] * {
   font-weight: normal !important;
   letter-spacing: normal !important;
   overflow: visible !important;
   max-width: none !important;
+  max-height: none !important;
+  width: auto !important;
+  height: auto !important;
 }
 
-/* Reset Studio container - allow full width and height */
-[data-sanity],
-[data-ui] {
-  overflow: visible !important;
-  max-width: 100% !important;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* Reset Studio elements to default sizes - target Studio container specifically */
-body:has([data-sanity]) [data-sanity] *,
-body:has([data-ui]) [data-ui] *,
-[data-sanity] *,
-[data-ui] * {
-  font-weight: normal !important;
-  letter-spacing: normal !important;
+/* Override ALL global CSS rules for Studio - be extremely aggressive */
+[data-sanity="studio-layout"] section,
+[data-sanity="studio-layout"] div,
+[data-sanity="studio-layout"] main,
+[data-sanity="studio-layout"] article,
+[data-sanity="studio-layout"] aside,
+[data-sanity="studio-layout"] header,
+[data-sanity="studio-layout"] footer {
   overflow: visible !important;
   max-width: none !important;
+  max-height: none !important;
+  width: auto !important;
+  height: auto !important;
 }
 
 /* Fix Studio SVG icons - only inside Studio */
