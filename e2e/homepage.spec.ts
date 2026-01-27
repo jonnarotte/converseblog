@@ -33,15 +33,15 @@ test.describe('Homepage', () => {
     const themeToggle = page.locator('[aria-label*="theme"], [aria-label*="Theme"]').first()
     
     if (await themeToggle.isVisible()) {
-      const initialClass = await page.html()
+      const initialHtml = await page.content()
       await themeToggle.click()
       
       // Wait for theme change
       await page.waitForTimeout(500)
       
-      const newClass = await page.html()
-      // Theme should have changed
-      expect(newClass).not.toBe(initialClass)
+      const newHtml = await page.content()
+      // Theme should have changed (class or data attribute)
+      expect(newHtml).not.toBe(initialHtml)
     }
   })
 

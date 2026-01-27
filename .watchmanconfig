@@ -1,0 +1,12 @@
+{
+  "ignore_dirs": [
+    ".next",
+    "node_modules",
+    ".deploy",
+    "coverage",
+    "dist",
+    "build",
+    "out",
+    ".sanity"
+  ]
+}

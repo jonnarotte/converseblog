@@ -5,14 +5,14 @@ test.describe('Blog Page', () => {
     await page.goto('/blog')
     
     // Check search bar is visible
-    const searchInput = page.getByPlaceholderText(/search blog posts/i)
+    const searchInput = page.getByPlaceholder(/search blog posts/i)
     await expect(searchInput).toBeVisible()
   })
 
   test('search functionality works', async ({ page }) => {
     await page.goto('/blog')
     
-    const searchInput = page.getByPlaceholderText(/search blog posts/i)
+    const searchInput = page.getByPlaceholder(/search blog posts/i)
     
     // Type in search
     await searchInput.fill('test')

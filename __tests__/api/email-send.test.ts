@@ -12,17 +12,23 @@ jest.mock('@/lib/email', () => ({
   createCustomEmail: jest.fn(() => '<html>Custom Email</html>'),
 }))
 
-// Mock Sanity client
-jest.mock('@/sanity/lib/client', () => ({
-  client: {
-    fetch: jest.fn(() =>
-      Promise.resolve([
-        { email: 'subscriber1@example.com', status: 'active' },
-        { email: 'subscriber2@example.com', status: 'active' },
-      ])
-    ),
-  },
-}))
+// Mock Sanity client - need to mock createClient used in the route
+const mockSubscribers = [
+  { _id: '1', email: 'subscriber1@example.com', status: 'active' },
+  { _id: '2', email: 'subscriber2@example.com', status: 'active' },
+]
+
+// Create mock function
+const createMockFetch = () => jest.fn(() => Promise.resolve(mockSubscribers))
+
+jest.mock('@sanity/client', () => {
+  const mockFetchFn = jest.fn(() => Promise.resolve(mockSubscribers))
+  return {
+    createClient: jest.fn(() => ({
+      fetch: mockFetchFn,
+    })),
+  }
+})
 
 describe('POST /api/email/send', () => {
   beforeEach(() => {
@@ -42,6 +48,11 @@ describe('POST /api/email/send', () => {
 
   it('sends custom email with valid auth', async () => {
     const { sendEmail } = require('@/lib/email')
+    const { createClient } = require('@sanity/client')
+    
+    // Get the mock client instance
+    const mockClient = createClient()
+    mockClient.fetch.mockResolvedValueOnce(mockSubscribers)
     sendEmail.mockResolvedValue({ id: 'test-id' })
 
     const request = new NextRequest(
@@ -69,6 +80,24 @@ describe('POST /api/email/send', () => {
 
   it('sends blog post email', async () => {
     const { sendEmail, createBlogPostEmail } = require('@/lib/email')
+    const { createClient } = require('@sanity/client')
+    
+    // Mock subscribers first, then post
+    const mockPost = {
+      _id: 'test-post-id',
+      title: 'Test Post',
+      excerpt: 'Test excerpt',
+      slug: { current: 'test-post' },
+      publishedAt: '2026-01-27',
+      coverImage: null,
+      authors: [],
+    }
+    
+    // Get the mock client instance
+    const mockClient = createClient()
+    mockClient.fetch
+      .mockResolvedValueOnce(mockSubscribers) // First call: get subscribers
+      .mockResolvedValueOnce(mockPost) // Second call: get post
     sendEmail.mockResolvedValue({ id: 'test-id' })
     createBlogPostEmail.mockReturnValue('<html>Blog Post</html>')
 
