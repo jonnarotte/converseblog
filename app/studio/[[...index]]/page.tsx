@@ -59,7 +59,7 @@ export default function StudioPage() {
   }
 
   return (
-    <div suppressHydrationWarning>
+    <div suppressHydrationWarning data-sanity="studio-page" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
       <NextStudio config={config} />
     </div>
   )

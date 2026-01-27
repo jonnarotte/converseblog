@@ -1,6 +1,7 @@
 'use client'
 
 import Link from "next/link"
+import Image from "next/image"
 import { urlFor } from "@/lib/sanity"
 import type { Post } from "@/lib/sanity"
 
@@ -42,13 +43,18 @@ export default function BlogCard({ post }: BlogCardProps) {
                 const authorContent = (
                   <>
                     {authorImageUrl && (
-                      <img
-                        src={authorImageUrl}
-                        alt={author.name}
-                        className="w-6 h-6 rounded-full object-cover border border-gray-300 dark:border-gray-700"
-                        loading="lazy"
-                        decoding="async"
-                      />
+                      <div className="w-6 h-6 rounded-full overflow-hidden border border-gray-300 dark:border-gray-700 relative flex-shrink-0">
+                        <Image
+                          src={authorImageUrl}
+                          alt={author.name}
+                          width={24}
+                          height={24}
+                          className="object-cover"
+                          loading="lazy"
+                          placeholder="blur"
+                          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                        />
+                      </div>
                     )}
                     <span>{author.name}</span>
                   </>
@@ -82,15 +88,19 @@ export default function BlogCard({ post }: BlogCardProps) {
         prefetch={true}
       >
         {coverImageUrl && (
-          <div className="w-full mb-3 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-900 relative">
-            <img
-              src={coverImageUrl}
-              alt={post.title}
-              className="w-full h-auto transition-transform duration-300 group-hover:scale-105"
-              style={{ maxWidth: '100%', height: 'auto', maxHeight: '200px', objectFit: 'contain' }}
-              loading="lazy"
-              decoding="async"
-            />
+          <div className="w-full mb-3 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-900 relative" style={{ overflow: 'hidden', maxHeight: '200px' }}>
+            <div className="relative w-full" style={{ aspectRatio: '16/9', maxHeight: '200px' }}>
+              <Image
+                src={coverImageUrl}
+                alt={post.title}
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                loading="lazy"
+                placeholder="blur"
+                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
           </div>
         )}
         

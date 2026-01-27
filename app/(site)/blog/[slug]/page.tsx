@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import Image from "next/image"
 import { getAllPosts, getAllPostSlugs, getPostBySlug, PortableText, urlFor } from "@/lib/sanity"
 import { portableTextComponents } from "@/components/PortableTextComponents"
 import { generateStructuredData } from "./structured-data"
@@ -221,13 +222,18 @@ export default async function BlogPost({
                     className="flex items-center gap-2 hover:opacity-80 transition-opacity group"
                   >
                     {authorImageUrl && (
-                      <img
-                        src={authorImageUrl}
-                        alt={author.name}
-                        className="w-8 h-8 rounded-full object-cover border border-gray-300 dark:border-gray-700"
-                        loading="lazy"
-                        decoding="async"
-                      />
+                      <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-300 dark:border-gray-700 relative flex-shrink-0">
+                        <Image
+                          src={authorImageUrl}
+                          alt={author.name}
+                          width={32}
+                          height={32}
+                          className="object-cover"
+                          loading="lazy"
+                          placeholder="blur"
+                          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                        />
+                      </div>
                     )}
                     <span className="text-blue-600 dark:text-blue-400 font-medium group-hover:underline">
                       {author.name}
@@ -237,13 +243,18 @@ export default async function BlogPost({
                 ) : (
                   <span key={author._id} className="flex items-center gap-2">
                     {authorImageUrl && (
-                      <img
-                        src={authorImageUrl}
-                        alt={author.name}
-                        className="w-8 h-8 rounded-full object-cover border border-gray-300 dark:border-gray-700"
-                        loading="lazy"
-                        decoding="async"
-                      />
+                      <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-300 dark:border-gray-700 relative flex-shrink-0">
+                        <Image
+                          src={authorImageUrl}
+                          alt={author.name}
+                          width={32}
+                          height={32}
+                          className="object-cover"
+                          loading="lazy"
+                          placeholder="blur"
+                          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                        />
+                      </div>
                     )}
                     <span className="text-gray-700 dark:text-gray-300 font-medium">
                       {author.name}
@@ -258,20 +269,20 @@ export default async function BlogPost({
       </div>
 
       {coverImageUrl && (
-        <div className="w-full flex justify-center rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
-          <img
-            src={coverImageUrl}
-            alt={post.title}
-            className="w-full h-auto max-w-2xl"
-            style={{ 
-              maxWidth: '100%', 
-              height: 'auto',
-              maxHeight: isCoverVertical ? '600px' : '500px',
-              objectFit: 'contain'
-            }}
-            loading="eager"
-            decoding="async"
-          />
+        <div className="w-full flex justify-center rounded-lg bg-gray-100 dark:bg-gray-900" style={{ overflow: 'hidden', maxHeight: isCoverVertical ? '600px' : '500px' }}>
+          <div className="relative w-full max-w-2xl" style={{ aspectRatio: isCoverVertical ? '3/4' : '16/9', maxHeight: isCoverVertical ? '600px' : '500px' }}>
+            <Image
+              src={coverImageUrl}
+              alt={post.title}
+              fill
+              className="object-contain"
+              loading="eager"
+              priority
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+              sizes="(max-width: 768px) 100vw, 672px"
+            />
+          </div>
         </div>
       )}
 
