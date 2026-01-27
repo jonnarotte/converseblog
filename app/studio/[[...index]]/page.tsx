@@ -26,6 +26,41 @@ export default function StudioPage() {
 
   useEffect(() => {
     setIsMounted(true)
+    
+    // Completely isolate Studio from global CSS
+    const style = document.createElement('style')
+    style.textContent = `
+      /* Force Studio isolation */
+      html:has([data-sanity="studio-layout"]),
+      body:has([data-sanity="studio-layout"]) {
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: fixed !important;
+        width: 100vw !important;
+        height: 100vh !important;
+      }
+      
+      [data-sanity="studio-layout"] {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        overflow: visible !important;
+        z-index: 99999 !important;
+      }
+      
+      [data-sanity="studio-layout"] * {
+        overflow: visible !important;
+        max-width: none !important;
+        max-height: none !important;
+      }
+    `
+    document.head.appendChild(style)
+    
     // Suppress hydration warnings for Sanity Studio
     const originalError = console.error
     console.error = (...args: any[]) => {
@@ -42,6 +77,7 @@ export default function StudioPage() {
     }
     
     return () => {
+      document.head.removeChild(style)
       console.error = originalError
     }
   }, [])
