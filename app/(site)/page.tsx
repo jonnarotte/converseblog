@@ -55,52 +55,52 @@ export default function Home() {
         </div>
       </ScrollReveal>
 
-      <div className="grid md:grid-cols-4 gap-6 relative z-10 w-full max-w-full" style={{ overflowY: 'visible', maxHeight: 'none' }}>
+      <div className="grid md:grid-cols-4 gap-6 relative z-10 w-full max-w-full" style={{ overflowY: 'visible', maxHeight: 'none', alignItems: 'stretch' }}>
         <ScrollReveal direction="up" delay={100}>
-          <InteractiveCard className="group border border-gray-300 dark:border-gray-700 p-6 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-lg bg-white/50 dark:bg-black/50 backdrop-blur-sm h-full flex flex-col">
+          <InteractiveCard className="group border border-gray-300 dark:border-gray-700 p-6 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-lg bg-white/50 dark:bg-black/50 backdrop-blur-sm h-full flex flex-col" style={{ minHeight: 0 }}>
             <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 mb-4 flex items-center justify-center group-hover:bg-blue-500 dark:group-hover:bg-blue-500 transition-colors flex-shrink-0">
               <svg className="w-6 h-6 text-blue-600 dark:text-blue-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
             </div>
-            <h3 className="font-medium mb-2">Record</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow">Capture your natural speech patterns and vocal characteristics</p>
+            <h3 className="font-medium mb-2 flex-shrink-0">Record</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow min-h-0">Capture your natural speech patterns and vocal characteristics</p>
           </InteractiveCard>
         </ScrollReveal>
         
         <ScrollReveal direction="up" delay={200}>
-          <InteractiveCard className="group border border-gray-300 dark:border-gray-700 p-6 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-lg bg-white/50 dark:bg-black/50 backdrop-blur-sm h-full flex flex-col">
+          <InteractiveCard className="group border border-gray-300 dark:border-gray-700 p-6 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-lg bg-white/50 dark:bg-black/50 backdrop-blur-sm h-full flex flex-col" style={{ minHeight: 0 }}>
             <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 mb-4 flex items-center justify-center group-hover:bg-blue-500 dark:group-hover:bg-blue-500 transition-colors flex-shrink-0">
               <svg className="w-6 h-6 text-blue-600 dark:text-blue-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
               </svg>
             </div>
-            <h3 className="font-medium mb-2">Visualize</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow">See your voice transformed into visual shapes and patterns</p>
+            <h3 className="font-medium mb-2 flex-shrink-0">Visualize</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow min-h-0">See your voice transformed into visual shapes and patterns</p>
           </InteractiveCard>
         </ScrollReveal>
         
         <ScrollReveal direction="up" delay={300}>
-          <InteractiveCard className="group border border-gray-300 dark:border-gray-700 p-6 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-lg bg-white/50 dark:bg-black/50 backdrop-blur-sm h-full flex flex-col">
+          <InteractiveCard className="group border border-gray-300 dark:border-gray-700 p-6 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-lg bg-white/50 dark:bg-black/50 backdrop-blur-sm h-full flex flex-col" style={{ minHeight: 0 }}>
             <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 mb-4 flex items-center justify-center group-hover:bg-blue-500 dark:group-hover:bg-blue-500 transition-colors flex-shrink-0">
               <svg className="w-6 h-6 text-blue-600 dark:text-blue-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <h3 className="font-medium mb-2">Discover</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow">Find your unique voice cluster and communication style</p>
+            <h3 className="font-medium mb-2 flex-shrink-0">Discover</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow min-h-0">Find your unique voice cluster and communication style</p>
           </InteractiveCard>
         </ScrollReveal>
         
         <ScrollReveal direction="up" delay={400}>
-          <InteractiveCard className="group border border-gray-300 dark:border-gray-700 p-6 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-lg bg-white/50 dark:bg-black/50 backdrop-blur-sm h-full flex flex-col">
+          <InteractiveCard className="group border border-gray-300 dark:border-gray-700 p-6 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-lg bg-white/50 dark:bg-black/50 backdrop-blur-sm h-full flex flex-col" style={{ minHeight: 0 }}>
             <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 mb-4 flex items-center justify-center group-hover:bg-blue-500 dark:group-hover:bg-blue-500 transition-colors flex-shrink-0">
               <svg className="w-6 h-6 text-blue-600 dark:text-blue-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h3 className="font-medium mb-2">Transform</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow">Practice daily to intentionally shape your communication</p>
+            <h3 className="font-medium mb-2 flex-shrink-0">Transform</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow min-h-0">Practice daily to intentionally shape your communication</p>
           </InteractiveCard>
         </ScrollReveal>
       </div>
