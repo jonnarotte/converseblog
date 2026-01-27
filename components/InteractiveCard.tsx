@@ -78,6 +78,8 @@ export default function InteractiveCard({ children, className = '' }: Interactiv
           ? `perspective(1000px) rotateX(${transform.rotateX}deg) rotateY(${transform.rotateY}deg) scale(1.02)`
           : 'perspective(1000px) rotateX(0) rotateY(0) scale(1)',
         transformStyle: 'preserve-3d',
+        overflow: 'visible',
+        maxHeight: 'none',
       }}
     >
       {children}

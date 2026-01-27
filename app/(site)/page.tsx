@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <section className="space-y-24 relative w-full overflow-x-hidden">
+    <section className="space-y-24 relative w-full overflow-x-hidden" style={{ overflowY: 'visible', maxHeight: 'none' }}>
       {/* Interactive particle background */}
       <InteractiveBackground />
       
@@ -55,7 +55,7 @@ export default function Home() {
         </div>
       </ScrollReveal>
 
-      <div className="grid md:grid-cols-4 gap-6 relative z-10 w-full max-w-full">
+      <div className="grid md:grid-cols-4 gap-6 relative z-10 w-full max-w-full" style={{ overflowY: 'visible', maxHeight: 'none' }}>
         <ScrollReveal direction="up" delay={100}>
           <InteractiveCard className="group border border-gray-300 dark:border-gray-700 p-6 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-lg bg-white/50 dark:bg-black/50 backdrop-blur-sm h-full flex flex-col">
             <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 mb-4 flex items-center justify-center group-hover:bg-blue-500 dark:group-hover:bg-blue-500 transition-colors flex-shrink-0">

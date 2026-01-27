@@ -25,10 +25,10 @@ export default function SiteLayout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteData) }}
       />
-      <div className="w-full overflow-x-hidden overflow-y-visible">
+      <div className="w-full overflow-x-hidden" style={{ overflowY: 'visible', maxHeight: 'none' }}>
         <ReadingProgress />
         <Navbar />
-        <main className="flex-1 max-w-6xl mx-auto px-6 py-12 relative z-10 w-full overflow-x-hidden overflow-y-visible">
+        <main className="flex-1 max-w-6xl mx-auto px-6 py-12 relative z-10 w-full overflow-x-hidden" style={{ overflowY: 'visible', maxHeight: 'none' }}>
           {children}
         </main>
         <Footer />

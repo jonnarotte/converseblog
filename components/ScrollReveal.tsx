@@ -70,6 +70,8 @@ export default function ScrollReveal({
         opacity: isVisible ? 1 : 0,
         transform: getTransform(),
         transition: 'opacity 0.6s ease-out, transform 0.6s ease-out',
+        overflow: 'visible',
+        maxHeight: 'none',
       }}
     >
       {children}
