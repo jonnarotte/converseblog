@@ -6,5 +6,9 @@ export default function StudioLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <>{children}</>
+  return (
+    <div style={{ overflow: 'visible', maxWidth: 'none', width: '100%', height: '100vh' }}>
+      {children}
+    </div>
+  )
 }

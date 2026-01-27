@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@sanity/client'
-
-const writeClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '',
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-  useCdn: false,
-  apiVersion: '2024-01-01',
-  token: process.env.SANITY_API_TOKEN,
-})
+import { listContacts } from '@/lib/email'
 
 // Simple auth check
 function isAuthorized(request: NextRequest): boolean {
@@ -38,27 +30,35 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    // Get subscribers
-    const subscribers = await writeClient.fetch(
-      `*[_type == "newsletterSubscriber"${status !== 'all' ? ` && status == "${status}"` : ''}] | order(subscribedAt desc) [${offset}...${offset + limit}] {
-        _id,
-        email,
-        status,
-        subscribedAt,
-        source,
-      }`
-    )
+    // Get subscribers from Resend
+    const contactsResponse = await listContacts({ limit: 1000 })
+    let allContacts = contactsResponse.data || []
+
+    // Filter by status
+    if (status !== 'all') {
+      allContacts = allContacts.filter((contact: any) => {
+        if (status === 'active') return !contact.unsubscribed
+        if (status === 'unsubscribed') return contact.unsubscribed
+        return true
+      })
+    }
+
+    // Paginate
+    const paginatedContacts = allContacts.slice(offset, offset + limit)
+
+    // Format response
+    const subscribers = paginatedContacts.map((contact: any) => ({
+      email: contact.email,
+      status: contact.unsubscribed ? 'unsubscribed' : 'active',
+      subscribedAt: contact.created_at,
+      firstName: contact.first_name,
+      lastName: contact.last_name,
+    }))
 
     // Get counts
-    const totalCount = await writeClient.fetch(
-      `count(*[_type == "newsletterSubscriber"])`
-    )
-    const activeCount = await writeClient.fetch(
-      `count(*[_type == "newsletterSubscriber" && status == "active"])`
-    )
-    const unsubscribedCount = await writeClient.fetch(
-      `count(*[_type == "newsletterSubscriber" && status == "unsubscribed"])`
-    )
+    const totalCount = allContacts.length
+    const activeCount = allContacts.filter((c: any) => !c.unsubscribed).length
+    const unsubscribedCount = allContacts.filter((c: any) => c.unsubscribed).length
 
     return NextResponse.json(
       {
@@ -105,22 +105,11 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const subscriber = await writeClient.fetch(
-      `*[_type == "newsletterSubscriber" && email == $email][0]`,
-      { email }
-    )
-
-    if (!subscriber) {
-      return NextResponse.json(
-        { error: 'Subscriber not found' },
-        { status: 404 }
-      )
-    }
-
-    await writeClient
-      .patch(subscriber._id)
-      .set({ status })
-      .commit()
+    const { createOrUpdateContact } = await import('@/lib/email')
+    
+    await createOrUpdateContact(email, {
+      unsubscribed: status === 'unsubscribed',
+    })
 
     return NextResponse.json(
       { success: true, message: 'Subscriber updated' },

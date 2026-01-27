@@ -1,27 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@sanity/client'
-
-// Create a write client for mutations
-function getWriteClient() {
-  const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
-  const token = process.env.SANITY_API_TOKEN
-  
-  if (!projectId) {
-    throw new Error('NEXT_PUBLIC_SANITY_PROJECT_ID is not configured')
-  }
-  
-  if (!token) {
-    throw new Error('SANITY_API_TOKEN is not configured. Please add it to your .env.local file.')
-  }
-  
-  return createClient({
-    projectId,
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-    useCdn: false, // Use CDN for reads, but not for writes
-    apiVersion: '2024-01-01',
-    token,
-  })
-}
+import { createOrUpdateContact, getContact } from '@/lib/email'
 
 // Simple email validation
 function isValidEmail(email: string): boolean {
@@ -49,29 +27,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get write client (will throw if not configured)
-    const writeClient = getWriteClient()
-
-    // Check if email already exists
-    const existing = await writeClient.fetch(
-      `*[_type == "newsletterSubscriber" && email == $email][0]`,
-      { email }
-    )
+    // Check if contact already exists in Resend
+    const existing = await getContact(email)
 
     if (existing) {
-      // If exists but unsubscribed, reactivate
-      if (existing.status === 'unsubscribed') {
-        await writeClient
-          .patch(existing._id)
-          .set({
-            status: 'active',
-            subscribedAt: new Date().toISOString(),
-            source,
-            userAgent: request.headers.get('user-agent') || '',
-            ipAddress: getClientIP(request),
-          })
-          .commit()
-        
+      // If unsubscribed, reactivate
+      if (existing.unsubscribed) {
+        await createOrUpdateContact(email, { unsubscribed: false })
         return NextResponse.json(
           { message: 'Successfully resubscribed!', resubscribed: true },
           { status: 200 }
@@ -85,63 +47,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create new subscriber
-    const subscriber = {
-      _type: 'newsletterSubscriber',
-      email,
-      subscribedAt: new Date().toISOString(),
-      status: 'active',
-      source,
-      userAgent: request.headers.get('user-agent') || '',
-      ipAddress: getClientIP(request),
-    }
-
-    await writeClient.create(subscriber)
+    // Create new contact in Resend
+    await createOrUpdateContact(email, { unsubscribed: false })
 
     return NextResponse.json(
       { message: 'Successfully subscribed to newsletter!' },
       { status: 201 }
     )
   } catch (error) {
-    // Log detailed error for debugging (server-side only)
     const errorMessage = error instanceof Error ? error.message : String(error)
-    const errorStack = error instanceof Error ? error.stack : undefined
     
     console.error('Newsletter subscription error:', {
       message: errorMessage,
-      stack: errorStack,
-      hasProjectId: !!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-      hasToken: !!process.env.SANITY_API_TOKEN,
+      hasResendKey: !!process.env.RESEND_API_KEY,
     })
     
-    // Check if it's a configuration error
     if (error instanceof Error) {
-      if (error.message.includes('SANITY_API_TOKEN') || error.message.includes('not configured')) {
-        console.error('❌ Missing Sanity API token configuration')
-        return NextResponse.json(
-          { error: 'Server configuration error. Please contact support.' },
-          { status: 500 }
-        )
-      }
-      
-      if (error.message.includes('NEXT_PUBLIC_SANITY_PROJECT_ID') || error.message.includes('not configured')) {
-        console.error('❌ Missing Sanity Project ID configuration')
-        return NextResponse.json(
-          { error: 'Server configuration error. Please contact support.' },
-          { status: 500 }
-        )
-      }
-      
-      if (error.message.includes('token') || error.message.includes('unauthorized')) {
-        console.error('❌ Sanity API authentication failed')
-        return NextResponse.json(
-          { error: 'Server configuration error. Please contact support.' },
-          { status: 500 }
-        )
-      }
-      
-      if (error.message.includes('Insufficient permissions') || error.message.includes('permission') || (error as any).statusCode === 403) {
-        console.error('❌ Sanity API token lacks required permissions (needs Editor/Admin role)')
+      if (error.message.includes('RESEND_API_KEY') || error.message.includes('not configured')) {
+        console.error('❌ Missing Resend API key configuration')
         return NextResponse.json(
           { error: 'Server configuration error. Please contact support.' },
           { status: 500 }
@@ -169,22 +92,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const writeClient = getWriteClient()
-    
-    const subscriber = await writeClient.fetch(
-      `*[_type == "newsletterSubscriber" && email == $email][0]`,
-      { email }
-    )
+    const contact = await getContact(email)
 
-    if (!subscriber) {
+    if (!contact) {
       return NextResponse.json({ subscribed: false }, { status: 200 })
     }
 
     return NextResponse.json(
       {
-        subscribed: subscriber.status === 'active',
-        status: subscriber.status,
-        subscribedAt: subscriber.subscribedAt,
+        subscribed: !contact.unsubscribed,
+        status: contact.unsubscribed ? 'unsubscribed' : 'active',
+        subscribedAt: contact.created_at,
       },
       { status: 200 }
     )

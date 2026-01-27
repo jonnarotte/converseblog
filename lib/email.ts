@@ -8,6 +8,105 @@ interface EmailOptions {
   from?: string
 }
 
+// Resend Contacts API helpers
+const RESEND_API_URL = 'https://api.resend.com'
+
+async function resendRequest(endpoint: string, options: RequestInit = {}) {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY not configured')
+  }
+
+  const response = await fetch(`${RESEND_API_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
+    const errorMessage = errorData.error?.message || errorData.message || `Resend API error: ${response.status}`
+    const error = new Error(errorMessage)
+    ;(error as any).statusCode = response.status
+    throw error
+  }
+
+  return response.json()
+}
+
+// Create or update contact in Resend
+export async function createOrUpdateContact(email: string, data?: {
+  firstName?: string
+  lastName?: string
+  unsubscribed?: boolean
+}) {
+  try {
+    return await resendRequest('/contacts', {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        first_name: data?.firstName,
+        last_name: data?.lastName,
+        unsubscribed: data?.unsubscribed || false,
+      }),
+    })
+  } catch (error) {
+    // If contact exists (409 conflict or similar), update it
+    if (error instanceof Error && (
+      error.message.includes('already exists') ||
+      error.message.includes('409') ||
+      error.message.includes('duplicate')
+    )) {
+      return await resendRequest(`/contacts/${email}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          first_name: data?.firstName,
+          last_name: data?.lastName,
+          unsubscribed: data?.unsubscribed || false,
+        }),
+      })
+    }
+    throw error
+  }
+}
+
+// Get contact from Resend
+export async function getContact(email: string) {
+  try {
+    return await resendRequest(`/contacts/${email}`)
+  } catch (error) {
+    if (error instanceof Error && (
+      error.message.includes('not found') || 
+      (error as any).statusCode === 404
+    )) {
+      return null
+    }
+    throw error
+  }
+}
+
+// List contacts from Resend
+export async function listContacts(options?: {
+  audienceId?: string
+  limit?: number
+}) {
+  const params = new URLSearchParams()
+  if (options?.audienceId) params.set('audience_id', options.audienceId)
+  if (options?.limit) params.set('limit', options.limit.toString())
+
+  return await resendRequest(`/contacts?${params.toString()}`)
+}
+
+// Remove contact (unsubscribe)
+export async function removeContact(email: string) {
+  return await resendRequest(`/contacts/${email}`, {
+    method: 'DELETE',
+  })
+}
+
 // Simple fetch-based email sending (works with Resend API)
 export async function sendEmail({ to, subject, html, from }: EmailOptions) {
   const apiKey = process.env.RESEND_API_KEY

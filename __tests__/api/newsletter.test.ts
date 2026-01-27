@@ -5,48 +5,38 @@
 import { POST } from '@/app/api/newsletter/route'
 import { NextRequest } from 'next/server'
 
-// Create mock functions that can be accessed
-const mockFetch = jest.fn(() => Promise.resolve([]))
-const mockCreate = jest.fn(() => Promise.resolve({ _id: 'test-id' }))
-const mockPatch = {
-  set: jest.fn().mockReturnThis(),
-  commit: jest.fn(() => Promise.resolve({ _id: 'test-id' })),
-}
-
-// Mock createClient - must be hoisted
-jest.mock('@sanity/client', () => {
-  const mockFetchFn = jest.fn(() => Promise.resolve([]))
-  const mockCreateFn = jest.fn(() => Promise.resolve({ _id: 'test-id' }))
-  const mockPatchObj = {
-    set: jest.fn().mockReturnThis(),
-    commit: jest.fn(() => Promise.resolve({ _id: 'test-id' })),
-  }
-  
-  return {
-    createClient: jest.fn(() => ({
-      fetch: mockFetchFn,
-      create: mockCreateFn,
-      patch: jest.fn(() => mockPatchObj),
-    })),
-    // Export mocks for test access
-    __mockFetch: mockFetchFn,
-    __mockCreate: mockCreateFn,
-  }
-})
+// Mock Resend API calls
+const mockFetch = global.fetch as jest.Mock
 
 describe('POST /api/newsletter', () => {
-  let mockClient: any
-  
   beforeEach(() => {
     jest.clearAllMocks()
-    const { createClient } = require('@sanity/client')
-    mockClient = createClient()
+    // Default: contact doesn't exist (404)
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ error: { message: 'not found' } }),
+      status: 404,
+    })
   })
 
   it('subscribes email successfully', async () => {
-    // Reset mocks - no existing subscriber
-    mockClient.fetch.mockResolvedValueOnce(null) // No existing subscriber
-    mockClient.create.mockResolvedValueOnce({ _id: 'test-id' })
+    // Mock: contact doesn't exist (404), then create succeeds (201)
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: async () => ({ error: { message: 'not found' } }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => ({ 
+          id: 'contact-id', 
+          email: 'test@example.com',
+          unsubscribed: false,
+          created_at: new Date().toISOString(),
+        }),
+      })
 
     const request = new NextRequest('http://localhost:3000/api/newsletter', {
       method: 'POST',
@@ -62,10 +52,14 @@ describe('POST /api/newsletter', () => {
     const response = await POST(request)
     const data = await response.json()
 
-    // Newsletter API returns 201 for new subscriptions, but check what it actually returns
+    // Newsletter API returns 201 for new subscriptions
     expect([200, 201]).toContain(response.status)
     expect(data.message).toBeTruthy()
-    expect(mockClient.create).toHaveBeenCalled()
+    // Verify Resend API was called to create contact
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('/contacts'),
+      expect.objectContaining({ method: 'POST' })
+    )
   })
 
   it('validates email format', async () => {
@@ -85,7 +79,17 @@ describe('POST /api/newsletter', () => {
   })
 
   it('handles duplicate email', async () => {
-    mockClient.fetch.mockResolvedValueOnce([{ email: 'test@example.com', status: 'active' }])
+    // Mock: contact already exists and is subscribed
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        id: 'contact-id',
+        email: 'test@example.com',
+        unsubscribed: false,
+        created_at: new Date().toISOString(),
+      }),
+    })
 
     const request = new NextRequest('http://localhost:3000/api/newsletter', {
       method: 'POST',

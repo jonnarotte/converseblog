@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@sanity/client'
-import { sendEmail, createBlogPostEmail, createCustomEmail } from '@/lib/email'
+import { sendEmail, createBlogPostEmail, createCustomEmail, listContacts } from '@/lib/email'
 
-// Create a write client for mutations
-const writeClient = createClient({
+// Create a read-only client for fetching posts (still need Sanity for blog content)
+const readClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '',
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-  useCdn: false,
+  useCdn: true,
   apiVersion: '2024-01-01',
-  token: process.env.SANITY_API_TOKEN,
 })
 
 // Simple auth check (you should use proper authentication in production)
@@ -40,13 +39,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { type, postId, subject, message, ctaText, ctaUrl } = body
 
-    // Get all active subscribers
-    const subscribers = await writeClient.fetch(
-      `*[_type == "newsletterSubscriber" && status == "active"] {
-        _id,
-        email
-      }`
-    )
+    // Get all active subscribers from Resend
+    const contactsResponse = await listContacts({ limit: 1000 })
+    const subscribers = contactsResponse.data?.filter((contact: any) => !contact.unsubscribed) || []
 
     if (!subscribers || subscribers.length === 0) {
       return NextResponse.json(
@@ -55,13 +50,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const emails = subscribers.map((s: any) => s.email)
+    const emails = subscribers.map((contact: any) => contact.email)
     let emailHtml = ''
     let emailSubject = ''
 
     if (type === 'blog-post' && postId) {
-      // Get post data
-      const post = await writeClient.fetch(
+      // Get post data from Sanity (still need Sanity for blog content)
+      const post = await readClient.fetch(
         `*[_type == "post" && _id == $postId][0] {
           _id,
           title,
@@ -168,10 +163,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get subscriber count
-    const subscriberCount = await writeClient.fetch(
-      `count(*[_type == "newsletterSubscriber" && status == "active"])`
-    )
+    // Get subscriber count from Resend
+    const contactsResponse = await listContacts({ limit: 1000 })
+    const subscriberCount = contactsResponse.data?.filter((contact: any) => !contact.unsubscribed).length || 0
 
     const hasEmailService = !!process.env.RESEND_API_KEY
 

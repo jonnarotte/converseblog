@@ -1,5 +1,36 @@
 /* Studio-specific styles to override global CSS - ONLY affects Studio */
 
+/* CRITICAL: Prevent global overflow rules from affecting Studio */
+html:has([data-sanity]),
+body:has([data-sanity]),
+html:has([data-ui]),
+body:has([data-ui]) {
+  overflow: visible !important;
+  max-width: none !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Override global section/div rules for Studio */
+html:has([data-sanity]) section,
+html:has([data-sanity]) div,
+html:has([data-sanity]) main,
+html:has([data-ui]) section,
+html:has([data-ui]) div,
+html:has([data-ui]) main {
+  overflow: visible !important;
+  max-width: none !important;
+}
+
+/* Reset Studio container - allow full width and height */
+[data-sanity],
+[data-ui] {
+  overflow: visible !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
 /* Reset Studio elements to default sizes - target Studio container specifically */
 body:has([data-sanity]) [data-sanity] *,
 body:has([data-ui]) [data-ui] *,
@@ -7,6 +38,8 @@ body:has([data-ui]) [data-ui] *,
 [data-ui] * {
   font-weight: normal !important;
   letter-spacing: normal !important;
+  overflow: visible !important;
+  max-width: none !important;
 }
 
 /* Fix Studio SVG icons - only inside Studio */
@@ -16,17 +49,51 @@ body:has([data-ui]) [data-ui] *,
   height: auto !important;
   max-width: none !important;
   max-height: none !important;
+  overflow: visible !important;
 }
 
-/* Fix Studio buttons and interactive elements */
+/* Fix Studio buttons and interactive elements - ensure full visibility */
 [data-sanity] button,
 [data-sanity] [role="button"],
 [data-ui] button,
-[data-ui] [role="button"] {
+[data-ui] [role="button"],
+[data-sanity] input,
+[data-ui] input,
+[data-sanity] textarea,
+[data-ui] textarea {
   font-size: inherit !important;
   padding: inherit !important;
   min-width: auto !important;
   min-height: auto !important;
+  max-width: none !important;
+  overflow: visible !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Fix Studio text elements - ensure full visibility */
+[data-sanity] p,
+[data-sanity] span,
+[data-sanity] div,
+[data-sanity] h1,
+[data-sanity] h2,
+[data-sanity] h3,
+[data-sanity] h4,
+[data-sanity] h5,
+[data-sanity] h6,
+[data-ui] p,
+[data-ui] span,
+[data-ui] div,
+[data-ui] h1,
+[data-ui] h2,
+[data-ui] h3,
+[data-ui] h4,
+[data-ui] h5,
+[data-ui] h6 {
+  overflow: visible !important;
+  max-width: none !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
 }
 
 /* Fix Studio icons specifically */
@@ -34,4 +101,16 @@ body:has([data-ui]) [data-ui] *,
 [data-ui="Icon"] {
   width: auto !important;
   height: auto !important;
+  max-width: none !important;
+  overflow: visible !important;
+}
+
+/* Fix Studio panels and containers */
+[data-sanity] [class*="Panel"],
+[data-ui] [class*="Panel"],
+[data-sanity] [class*="Container"],
+[data-ui] [class*="Container"] {
+  overflow: visible !important;
+  max-width: none !important;
+  width: 100% !important;
 }
