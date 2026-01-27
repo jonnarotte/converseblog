@@ -11,7 +11,7 @@ describe('Newsletter Component', () => {
   })
 
   it('renders newsletter form', () => {
-    render(<Newsletter source="test" />)
+    render(<Newsletter source="other" />)
     
     const input = screen.getByPlaceholderText(/enter your email/i)
     expect(input).toBeInTheDocument()
@@ -22,7 +22,7 @@ describe('Newsletter Component', () => {
 
   it('validates email format', async () => {
     const user = userEvent.setup()
-    render(<Newsletter source="test" />)
+    render(<Newsletter source="other" />)
     
     const input = screen.getByPlaceholderText(/enter your email/i)
     const button = screen.getByRole('button', { name: /subscribe/i })
@@ -44,7 +44,7 @@ describe('Newsletter Component', () => {
       json: async () => ({ success: true }),
     })
 
-    render(<Newsletter source="test" />)
+    render(<Newsletter source="other" />)
     
     const input = screen.getByPlaceholderText(/enter your email/i)
     const button = screen.getByRole('button', { name: /subscribe/i })

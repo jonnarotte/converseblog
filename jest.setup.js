@@ -48,12 +48,38 @@ global.fetch = jest.fn((url, options) => {
   return Promise.reject(new Error('Unknown fetch call'))
 })
 
-// Mock Sanity client
+// Mock Sanity client - must be before any imports
+const mockFetch = jest.fn(() => Promise.resolve([]))
+const mockCreate = jest.fn(() => Promise.resolve({ _id: 'test-id' }))
+const mockPatch = {
+  set: jest.fn().mockReturnThis(),
+  commit: jest.fn(() => Promise.resolve({ _id: 'test-id' })),
+}
+
+// Mock the Sanity client module
+jest.mock('@sanity/client', () => ({
+  createClient: jest.fn(() => ({
+    fetch: mockFetch,
+    create: mockCreate,
+    patch: jest.fn(() => mockPatch),
+    withConfig: jest.fn(() => ({
+      fetch: mockFetch,
+      create: mockCreate,
+      patch: jest.fn(() => mockPatch),
+    })),
+  })),
+}))
+
+// Mock the client export
 jest.mock('@/sanity/lib/client', () => ({
   client: {
-    fetch: jest.fn(() => Promise.resolve([])),
+    fetch: mockFetch,
+    create: mockCreate,
+    patch: jest.fn(() => mockPatch),
     withConfig: jest.fn(() => ({
-      fetch: jest.fn(() => Promise.resolve([])),
+      fetch: mockFetch,
+      create: mockCreate,
+      patch: jest.fn(() => mockPatch),
     })),
   },
 }))

@@ -19,7 +19,7 @@ describe('Logo Component', () => {
   it('applies custom className', () => {
     const { container } = render(<Logo className="custom-class" />)
     const svg = container.querySelector('svg')
-    expect(svg?.className).toContain('custom-class')
+    expect(svg).toHaveClass('custom-class')
   })
 
   it('respects size prop', () => {
