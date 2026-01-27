@@ -84,7 +84,7 @@ VM_SSH_KEY=-----BEGIN OPENSSH PRIVATE KEY-----
 (your SSH private key)
 -----END OPENSSH PRIVATE KEY-----
 NEXT_PUBLIC_SANITY_PROJECT_ID=your-project-id
-SANITY_API_TOKEN=your-sanity-api-token
+SANITY_API_TOKEN=your-sanity-api-token (⚠️ CRITICAL - Newsletter API requires this)
 ```
 
 #### Optional Secrets (recommended):
@@ -92,11 +92,41 @@ SANITY_API_TOKEN=your-sanity-api-token
 NEXT_PUBLIC_SANITY_DATASET=production
 NEXT_PUBLIC_SITE_URL=https://yourdomain.com
 NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
-RESEND_API_KEY=re_xxxxxxxxxxxxx
-EMAIL_FROM=noreply@yourdomain.com
+RESEND_API_KEY=re_xxxxxxxxxxxxx (⚠️ Required for email sending)
+EMAIL_FROM=noreply@yourdomain.com (⚠️ Required for email sending)
 EMAIL_API_KEY=your-secret-api-key
 WEBHOOK_SECRET=your-webhook-secret
 ```
+
+### ⚠️ Newsletter API 500 Error Fix
+
+If newsletter subscription returns 500 error in production:
+
+#### Error: "Insufficient permissions; permission 'create' required" (403)
+
+**This means your Sanity token has wrong permissions!**
+
+1. **Go to [sanity.io/manage](https://sanity.io/manage)**
+2. **Select your project** → **API** → **Tokens**
+3. **Create NEW token** with **Editor** or **Admin** permissions ⚠️ (NOT Viewer!)
+4. **Update `SANITY_API_TOKEN` in GitHub Secrets** with the new token
+5. **Redeploy** (push to main or manual trigger)
+6. **Test** newsletter subscription
+
+#### Error: "SANITY_API_TOKEN not configured" (500)
+
+1. **Verify `SANITY_API_TOKEN` is set** in GitHub Secrets
+2. **Verify `NEXT_PUBLIC_SANITY_PROJECT_ID` is set** in GitHub Secrets
+3. **Redeploy** after adding secrets
+
+#### Check server logs:
+```bash
+ssh user@server 'sudo journalctl -u converseblog -f'
+```
+
+Look for:
+- `❌ Sanity API token lacks required permissions` → Token needs Editor role
+- `❌ Missing Sanity API token` → Token not set in GitHub Secrets
 
 ### 2. Get Your SSH Key
 

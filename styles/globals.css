@@ -104,6 +104,20 @@
     max-width: 100%;
   }
 
+  /* Prevent nested scrollbars - only allow body scroll */
+  section, div {
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+  
+  /* Mobile-specific: hide all scrollbars except body */
+  @media (max-width: 768px) {
+    section, div, main {
+      overflow-y: visible !important;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
   /* Prevent SVG overflow */
   svg {
     max-width: 100%;

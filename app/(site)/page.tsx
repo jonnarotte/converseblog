@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <section className="space-y-24 relative w-full overflow-x-hidden">
+    <section className="space-y-24 relative w-full overflow-x-hidden overflow-y-visible">
       {/* Interactive particle background */}
       <InteractiveBackground />
       
@@ -40,7 +40,7 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] max-w-[80vw] bg-blue-50 dark:bg-blue-950/10 rounded-full blur-3xl opacity-10"></div>
       </div>
       <ScrollReveal direction="up" delay={0}>
-        <div className="text-center space-y-6 relative z-10">
+        <div className="text-center space-y-6 relative z-10 overflow-visible">
           <h1 className="text-5xl font-medium">
             Understand Your Voice.<br />Shape How You're Heard.
           </h1>

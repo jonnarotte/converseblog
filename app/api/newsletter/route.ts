@@ -103,12 +103,29 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    console.error('Newsletter subscription error:', error)
+    // Log detailed error for debugging (server-side only)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    
+    console.error('Newsletter subscription error:', {
+      message: errorMessage,
+      stack: errorStack,
+      hasProjectId: !!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+      hasToken: !!process.env.SANITY_API_TOKEN,
+    })
     
     // Check if it's a configuration error
     if (error instanceof Error) {
       if (error.message.includes('SANITY_API_TOKEN') || error.message.includes('not configured')) {
-        console.error('Missing Sanity API token configuration')
+        console.error('❌ Missing Sanity API token configuration')
+        return NextResponse.json(
+          { error: 'Server configuration error. Please contact support.' },
+          { status: 500 }
+        )
+      }
+      
+      if (error.message.includes('NEXT_PUBLIC_SANITY_PROJECT_ID') || error.message.includes('not configured')) {
+        console.error('❌ Missing Sanity Project ID configuration')
         return NextResponse.json(
           { error: 'Server configuration error. Please contact support.' },
           { status: 500 }
@@ -116,7 +133,15 @@ export async function POST(request: NextRequest) {
       }
       
       if (error.message.includes('token') || error.message.includes('unauthorized')) {
-        console.error('Sanity API authentication failed')
+        console.error('❌ Sanity API authentication failed')
+        return NextResponse.json(
+          { error: 'Server configuration error. Please contact support.' },
+          { status: 500 }
+        )
+      }
+      
+      if (error.message.includes('Insufficient permissions') || error.message.includes('permission') || (error as any).statusCode === 403) {
+        console.error('❌ Sanity API token lacks required permissions (needs Editor/Admin role)')
         return NextResponse.json(
           { error: 'Server configuration error. Please contact support.' },
           { status: 500 }
