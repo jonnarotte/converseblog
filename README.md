@@ -49,10 +49,25 @@ npm run dev
 
 Visit [http://localhost:3000](http://localhost:3000)
 
+### 5. Run Tests (Before Pushing)
+
+```bash
+# Quick test before pushing
+npm run test:pre-push
+
+# Or run individually:
+npm test              # Unit tests
+npm run test:e2e      # E2E tests
+npm run test:coverage # With coverage report
+```
+
+See [TESTING.md](./TESTING.md) for complete testing guide.
+
 ## Documentation
 
 - **[SETUP.md](./SETUP.md)** - Complete setup and configuration guide
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - CI/CD deployment guide
+- **[TESTING.md](./TESTING.md)** - Complete testing guide for local development
 - **[FEATURES.md](./FEATURES.md)** - All features and capabilities
 - **[EMAIL.md](./EMAIL.md)** - Newsletter and email setup
 
