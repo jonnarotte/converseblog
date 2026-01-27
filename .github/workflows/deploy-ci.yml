@@ -1,0 +1,236 @@
+name: CI/CD Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Allow manual trigger
+  pull_request:
+    branches:
+      - main
+      - master
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build application
+        env:
+          NEXT_PUBLIC_SANITY_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_SANITY_PROJECT_ID }}
+          NEXT_PUBLIC_SANITY_DATASET: ${{ secrets.NEXT_PUBLIC_SANITY_DATASET || 'production' }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL || 'https://converze.org' }}
+        run: npx next build --webpack
+
+      - name: Verify build
+        run: |
+          if [ ! -d ".next/standalone" ]; then
+            echo "❌ Build failed: .next/standalone not found"
+            exit 1
+          fi
+          if [ ! -f ".next/standalone/server.js" ]; then
+            echo "❌ Build failed: server.js not found"
+            exit 1
+          fi
+          echo "✓ Build verified"
+
+      - name: Run postbuild script
+        run: node scripts/copy-static.js
+
+      - name: Verify chunks
+        run: |
+          CHUNKS=$(find .next/standalone/.next/static/chunks -name "*.js" 2>/dev/null | wc -l)
+          if [ "$CHUNKS" -eq 0 ]; then
+            echo "❌ No chunks found!"
+            exit 1
+          fi
+          echo "✓ Found $CHUNKS chunks"
+
+      - name: Create deployment package
+        run: |
+          mkdir -p .deploy
+          cp -r .next/standalone .deploy/standalone
+          
+          # Create .env.local from secrets
+          cat > .deploy/.env.local << EOF
+          NEXT_PUBLIC_SANITY_PROJECT_ID=${{ secrets.NEXT_PUBLIC_SANITY_PROJECT_ID }}
+          SANITY_API_TOKEN=${{ secrets.SANITY_API_TOKEN }}
+          NEXT_PUBLIC_SANITY_DATASET: ${{ secrets.NEXT_PUBLIC_SANITY_DATASET }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_GA_ID=${{ secrets.NEXT_PUBLIC_GA_ID }}
+          RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM=${{ secrets.EMAIL_FROM }}
+          EMAIL_API_KEY=${{ secrets.EMAIL_API_KEY }}
+          WEBHOOK_SECRET=${{ secrets.WEBHOOK_SECRET }}
+          EOF
+          
+          mkdir -p .deploy/scripts
+          cp scripts/stage3-deploy.sh .deploy/scripts/stage3-deploy.sh
+          chmod +x .deploy/scripts/stage3-deploy.sh
+
+      - name: Create optimized tarball
+        run: |
+          cd .deploy
+          tar -czf ../deploy.tar.gz --exclude='*.map' --exclude='*.test.*' --exclude='*.spec.*' .
+          cd ..
+          ls -lh deploy.tar.gz
+          echo "Tarball size: $(du -h deploy.tar.gz | cut -f1)"
+
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-package
+          path: deploy.tar.gz
+          retention-days: 7
+          compression-level: 9
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    
+    steps:
+      - name: Download deployment artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deploy-package
+          path: .
+
+      - name: Deploy to VM via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
+          source: "deploy.tar.gz"
+          target: "/tmp"
+          timeout: 900s
+          rm: false
+          overwrite: true
+
+      - name: Extract and deploy on VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            
+            # Stop service
+            echo "Stopping service..."
+            sudo systemctl stop converseblog || true
+            
+            # Create backup
+            echo "Creating backup..."
+            sudo mkdir -p /var/backups/converseblog
+            if [ -d /var/www/converseblog/standalone ] && sudo systemctl is-active --quiet converseblog 2>/dev/null; then
+              sudo rm -rf /var/backups/converseblog/last_working
+              sudo cp -r /var/www/converseblog/standalone /var/backups/converseblog/last_working
+              echo "✓ Backup created"
+            fi
+            
+            # Extract deployment package
+            echo "Extracting deployment package..."
+            cd /tmp
+            TEMP_DIR=$(mktemp -d)
+            tar -xzf deploy.tar.gz -C $TEMP_DIR
+            
+            # Move standalone build
+            if [ -d $TEMP_DIR/standalone ]; then
+              sudo rm -rf /var/www/converseblog/standalone.old
+              if [ -d /var/www/converseblog/standalone ]; then
+                sudo mv /var/www/converseblog/standalone /var/www/converseblog/standalone.old
+              fi
+              sudo mkdir -p /var/www/converseblog
+              sudo mv $TEMP_DIR/standalone /var/www/converseblog/standalone
+              echo "✓ Standalone build deployed"
+            else
+              echo "❌ Error: standalone directory not found"
+              exit 1
+            fi
+            
+            # Copy .env.local
+            if [ -f $TEMP_DIR/.env.local ]; then
+              sudo cp $TEMP_DIR/.env.local /var/www/converseblog/standalone/.env.local
+              echo "✓ .env.local copied"
+            fi
+            
+            # Copy scripts
+            if [ -d $TEMP_DIR/scripts ]; then
+              sudo mkdir -p /var/www/converseblog/scripts
+              sudo cp -r $TEMP_DIR/scripts/* /var/www/converseblog/scripts/
+              sudo chmod +x /var/www/converseblog/scripts/*.sh
+              sudo chown -R $(whoami):$(whoami) /var/www/converseblog/scripts
+              echo "✓ Scripts copied"
+            fi
+            
+            # Set permissions
+            sudo chown -R $(whoami):$(whoami) /var/www/converseblog/standalone
+            
+            # Cleanup
+            sudo rm -rf $TEMP_DIR
+            rm -f deploy.tar.gz
+            
+            # Run stage3 deployment
+            if [ -f /var/www/converseblog/scripts/stage3-deploy.sh ]; then
+              cd /var/www/converseblog
+              bash scripts/stage3-deploy.sh
+            else
+              # Fallback: restart service
+              sudo systemctl restart converseblog
+            fi
+            
+            # Verify deployment
+            echo "Verifying deployment..."
+            sleep 3
+            
+            if sudo systemctl is-active --quiet converseblog; then
+              echo "✅ Service is running"
+            else
+              echo "❌ Service failed to start"
+              sudo systemctl status converseblog --no-pager | head -20
+              exit 1
+            fi
+            
+            # Check chunks
+            CHUNKS=$(find /var/www/converseblog/standalone/.next/static/chunks -name "*.js" 2>/dev/null | wc -l)
+            echo "✓ Found $CHUNKS JavaScript chunks"
+            
+            if [ "$CHUNKS" -eq 0 ]; then
+              echo "⚠️  Warning: No chunks found!"
+            fi
+
+      - name: Health check
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            # Final health check
+            if sudo systemctl is-active --quiet converseblog; then
+              echo "✅ Deployment successful!"
+              echo "Service: $(sudo systemctl is-active converseblog)"
+            else
+              echo "❌ Service is not running"
+              exit 1
+            fi

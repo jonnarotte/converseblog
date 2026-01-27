@@ -2,6 +2,8 @@ import "../../styles/globals.css"
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
 import BackToTop from "@/components/BackToTop"
+import NewsletterModal from "@/components/NewsletterModal"
+import ReadingProgress from "@/components/ReadingProgress"
 import { generateOrganizationStructuredData, generateWebSiteStructuredData } from "./structured-data"
 
 export default function SiteLayout({
@@ -24,12 +26,14 @@ export default function SiteLayout({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteData) }}
       />
       <div className="w-full overflow-x-hidden">
+        <ReadingProgress />
         <Navbar />
         <main className="flex-1 max-w-6xl mx-auto px-6 py-12 relative z-10 w-full overflow-x-hidden">
           {children}
         </main>
         <Footer />
         <BackToTop />
+        <NewsletterModal />
       </div>
     </>
   )

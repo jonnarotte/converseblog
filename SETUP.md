@@ -1,96 +1,193 @@
-# Quick Setup Guide
+# Setup Guide
 
-## Initial Sanity Setup
+Complete setup instructions for the Converze Blog.
 
-### Step 1: Create Sanity Project
+## Prerequisites
+
+- Node.js 18 or higher
+- npm or yarn
+- Sanity account ([sanity.io](https://www.sanity.io))
+- (Optional) Resend account for emails ([resend.com](https://resend.com))
+
+## Initial Setup
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Create Sanity Project
 
 1. Go to [sanity.io](https://www.sanity.io) and sign up/login
-2. Click "Create project"
-3. Choose a project name (e.g., "Converze Blog")
-4. Choose a dataset name (default: "production")
-5. Copy your **Project ID** from the dashboard
+2. Create a new project
+3. Choose dataset name (default: "production")
+4. Copy your **Project ID** from the dashboard
 
-### Step 2: Configure Environment
+### 3. Configure Environment Variables
 
-Create `.env.local` file:
-
-```bash
-cp .env.example .env.local
-```
-
-Edit `.env.local` and add your Project ID:
+Create `.env.local` in the project root:
 
 ```env
-NEXT_PUBLIC_SANITY_PROJECT_ID=your-actual-project-id
+# Required: Sanity Configuration
+NEXT_PUBLIC_SANITY_PROJECT_ID=your-project-id-here
 NEXT_PUBLIC_SANITY_DATASET=production
+
+# Required: Sanity API Token (for newsletter, user sessions)
+# Get from: https://www.sanity.io/manage → API → Tokens
+SANITY_API_TOKEN=your-sanity-api-token-here
+
+# Required: Site URL
+NEXT_PUBLIC_SITE_URL=https://yourdomain.com
+
+# Optional: Google Analytics
+NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
+
+# Optional: Search Engine Verification
+GOOGLE_SITE_VERIFICATION=your-google-verification-code
+BING_VERIFICATION=your-bing-verification-code
+
+# Optional: Email Service (Resend)
+RESEND_API_KEY=re_xxxxxxxxxxxxx
+EMAIL_FROM=noreply@yourdomain.com
+EMAIL_API_KEY=your-secret-api-key
+WEBHOOK_SECRET=your-webhook-secret
 ```
 
-### Step 3: Initialize Sanity (First Time Only)
+### 4. Get Sanity API Token
 
-Run this command to authenticate:
+1. Go to [Sanity Manage](https://www.sanity.io/manage)
+2. Select your project
+3. Navigate to **API** → **Tokens**
+4. Click **Add API token**
+5. Name it (e.g., "Newsletter API")
+6. Select **Editor** permissions
+7. Copy the token to `.env.local`
+
+### 5. Deploy Sanity Schemas
 
 ```bash
+# Authenticate
 npx sanity@latest login
-```
 
-Then deploy the schema:
-
-```bash
+# Deploy schemas
 npx sanity@latest schema deploy
 ```
 
-### Step 4: Access Studio
+**Note:** You can also use Studio UI directly - schemas are automatically loaded from `sanity/schemaTypes/`.
 
-Start the dev server:
+### 6. Start Development Server
 
 ```bash
 npm run dev
 ```
 
-Visit `http://localhost:3000/studio` to access Sanity Studio.
+Visit:
+- **Site:** [http://localhost:3000](http://localhost:3000)
+- **Studio:** [http://localhost:3000/studio](http://localhost:3000/studio)
 
-### Step 5: Create Content
+## Create Content
 
-1. **Create Authors:**
-   - Go to Studio → Authors
-   - Create at least one author with name and slug
+### Create an Author
 
-2. **Create Blog Posts:**
-   - Go to Studio → Posts
-   - Create your first blog post
-   - Add title, excerpt, content, published date, and select author(s)
+1. Go to Studio → **Authors**
+2. Click **Create new**
+3. Fill in:
+   - Name
+   - Slug (auto-generated)
+   - Image (optional)
+   - Bio (optional)
+   - Social Link (optional)
+4. Click **Publish**
 
-3. **Update About Page:**
-   - Go to Studio → About Page
-   - Edit the content
+### Create a Blog Post
+
+1. Go to Studio → **Posts**
+2. Click **Create new**
+3. Fill in:
+   - Title
+   - Slug (auto-generated)
+   - Excerpt
+   - Cover Image (optional)
+   - Published Date
+   - Authors (select one or more)
+   - Content (rich text editor)
+4. Click **Publish**
+
+### Update About Page
+
+1. Go to Studio → **About Page**
+2. Edit the content
+3. Click **Publish**
+
+### Configure Site Settings
+
+1. Go to Studio → **Site Settings**
+2. Configure:
+   - Organization name
+   - Description
+   - Email
+   - Social media links
+   - App download links
+   - Legal links
+
+## Optional: Email Newsletter Setup
+
+See [EMAIL.md](./EMAIL.md) for complete email setup instructions.
+
+**Quick Setup:**
+1. Sign up at [resend.com](https://resend.com) (free tier: 3,000 emails/month)
+2. Get API key from dashboard
+3. Add `RESEND_API_KEY` and `EMAIL_FROM` to `.env.local`
+4. Test email sending
+
+## Optional: Google Analytics
+
+1. Go to [Google Analytics](https://analytics.google.com/)
+2. Create a property for your website
+3. Get Measurement ID (format: `G-XXXXXXXXXX`)
+4. Add to `.env.local` as `NEXT_PUBLIC_GA_ID`
+
+## Optional: Search Engine Verification
+
+### Google Search Console
+1. Go to [Google Search Console](https://search.google.com/search-console)
+2. Add your property
+3. Choose "HTML tag" verification
+4. Copy verification code to `.env.local`
+
+### Bing Webmaster Tools
+1. Go to [Bing Webmaster Tools](https://www.bing.com/webmasters)
+2. Add your site
+3. Get verification code
+4. Add to `.env.local`
 
 ## Troubleshooting
 
 ### Studio Not Loading
-
-If `/studio` shows an error:
-1. Check your `.env.local` has the correct Project ID
-2. Make sure you ran `npx sanity@latest login`
-3. Try: `npx sanity@latest schema deploy`
+- Check `.env.local` has correct Project ID
+- Verify you ran `npx sanity@latest login`
+- Try: `npx sanity@latest schema deploy`
 
 ### No Posts Showing
-
-1. Make sure you've created posts in Sanity Studio
-2. Check that posts have:
-   - A slug
-   - Published date
-   - At least one author
-3. Verify environment variables are set correctly
+- Ensure posts are **published** (not just saved as draft)
+- Check posts have:
+  - A slug
+  - Published date
+  - At least one author
 
 ### Build Errors
+- Verify Node.js version: `node --version` (needs 18+)
+- Check all environment variables are set
+- Ensure Sanity project exists and is accessible
 
-If `npm run build` fails:
-1. Check all environment variables are set
-2. Make sure Sanity project exists and is accessible
-3. Check Node.js version (needs 18+)
+### Newsletter Not Working
+- Verify `SANITY_API_TOKEN` is set
+- Check token has Editor permissions
+- See [EMAIL.md](./EMAIL.md) for troubleshooting
 
 ## Next Steps
 
-- Customize the design in `components/` and `styles/globals.css`
+- Customize design in `components/` and `styles/globals.css`
 - Add more fields to schemas in `sanity/schemaTypes/`
-- Deploy following `DEPLOYMENT.md`
+- Deploy to production: See [DEPLOYMENT.md](./DEPLOYMENT.md)

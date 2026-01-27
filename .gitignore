@@ -99,4 +99,7 @@ temp/
 # Deployment files (keep deploy.sh and docs, but ignore server-specific configs)
 # Keep: deploy.sh, DEPLOY_QUICK.md, DEPLOYMENT.md
 # Ignore: server configs if any
+.deploy-config
+.deploy/
+deploy.tar.gz
 

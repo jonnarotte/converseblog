@@ -66,7 +66,7 @@ export default async function BlogPage({
           {!search && <PopularPosts posts={posts} />}
           
           <div className="max-w-2xl mx-auto pt-8">
-            <Newsletter />
+            <Newsletter source="blog" />
           </div>
         </>
       )}

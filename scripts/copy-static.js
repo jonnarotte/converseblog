@@ -77,14 +77,41 @@ if (fs.existsSync(nextStatic)) {
   process.exit(1);
 }
 
-// Copy public files
+// Copy public files (FORCE overwrite to ensure latest files)
 if (fs.existsSync(publicDir)) {
+  // Always remove old public directory completely
   if (fs.existsSync(standalonePublic)) {
     fs.rmSync(standalonePublic, { recursive: true, force: true });
   }
+  // Ensure directory is created fresh
+  fs.mkdirSync(standalonePublic, { recursive: true });
+  
   if (copyDir(publicDir, standalonePublic)) {
     const publicFiles = fs.readdirSync(standalonePublic);
     console.log(`✓ Public files copied (${publicFiles.length} files)`);
+    
+    // Verify favicon was copied correctly
+    const faviconPath = path.join(standalonePublic, 'favicon.svg');
+    const sourceFaviconPath = path.join(publicDir, 'favicon.svg');
+    if (fs.existsSync(sourceFaviconPath)) {
+      if (fs.existsSync(faviconPath)) {
+        const faviconSize = fs.statSync(faviconPath).size;
+        const sourceSize = fs.statSync(sourceFaviconPath).size;
+        if (faviconSize === sourceSize) {
+          console.log(`✓ Favicon verified (${faviconSize} bytes)`);
+        } else {
+          console.warn(`⚠️  Favicon size mismatch! Source: ${sourceSize}, Copied: ${faviconSize}`);
+          // Force copy again
+          fs.copyFileSync(sourceFaviconPath, faviconPath);
+          const newSize = fs.statSync(faviconPath).size;
+          console.log(`✓ Favicon force-copied (${newSize} bytes)`);
+        }
+      } else {
+        // Copy if missing
+        fs.copyFileSync(sourceFaviconPath, faviconPath);
+        console.log(`✓ Favicon copied (was missing)`);
+      }
+    }
   } else {
     console.warn('⚠️  Failed to copy public files');
   }
@@ -92,14 +119,79 @@ if (fs.existsSync(publicDir)) {
   console.warn('⚠️  public directory not found');
 }
 
-// Copy server files for dynamic routes (Studio)
-const serverApp = path.join(appDir, '.next/server/app');
-const standaloneServerApp = path.join(standaloneDir, '.next/server/app');
-if (fs.existsSync(serverApp)) {
-  fs.mkdirSync(path.dirname(standaloneServerApp), { recursive: true });
-  if (copyDir(serverApp, standaloneServerApp)) {
-    console.log('✓ Server files copied');
+// Copy server files for dynamic routes (Studio) - ENHANCED
+const serverDir = path.join(appDir, '.next/server');
+const standaloneServerDir = path.join(standaloneDir, '.next/server');
+
+if (fs.existsSync(serverDir)) {
+  fs.mkdirSync(standaloneServerDir, { recursive: true });
+  
+  // Copy entire server/app directory (CRITICAL for Studio)
+  const serverApp = path.join(serverDir, 'app');
+  const standaloneServerApp = path.join(standaloneServerDir, 'app');
+  if (fs.existsSync(serverApp)) {
+    if (copyDir(serverApp, standaloneServerApp)) {
+      console.log('✓ Server app files copied');
+    }
   }
+  
+  // Copy server chunks (CRITICAL for Studio runtime)
+  const serverChunks = path.join(serverDir, 'chunks');
+  const standaloneServerChunks = path.join(standaloneServerDir, 'chunks');
+  if (fs.existsSync(serverChunks)) {
+    if (copyDir(serverChunks, standaloneServerChunks)) {
+      const chunkFiles = fs.readdirSync(standaloneServerChunks).filter(f => f.endsWith('.js'));
+      console.log(`✓ Server chunks copied (${chunkFiles.length} files)`);
+    }
+  }
+  
+  // Copy server manifest files
+  const manifestFiles = ['middleware-manifest.json', 'next-server.js', 'app-paths-manifest.json'];
+  manifestFiles.forEach(file => {
+    const srcFile = path.join(serverDir, file);
+    const destFile = path.join(standaloneServerDir, file);
+    if (fs.existsSync(srcFile)) {
+      fs.copyFileSync(srcFile, destFile);
+    }
+  });
+  
+  console.log('✓ Server files copied');
+}
+
+// Final verification - check all critical files
+console.log('\n🔍 Verifying critical files...');
+const criticalFiles = [
+  { src: path.join(publicDir, 'favicon.svg'), dest: path.join(standalonePublic, 'favicon.svg') },
+  { src: path.join(publicDir, 'favicon.ico'), dest: path.join(standalonePublic, 'favicon.ico') },
+];
+
+let allGood = true;
+criticalFiles.forEach(({ src, dest }) => {
+  if (fs.existsSync(src)) {
+    if (fs.existsSync(dest)) {
+      const srcSize = fs.statSync(src).size;
+      const destSize = fs.statSync(dest).size;
+      if (srcSize === destSize) {
+        console.log(`✓ ${path.basename(src)} verified (${srcSize} bytes)`);
+      } else {
+        console.warn(`⚠️  ${path.basename(src)} size mismatch! Force copying...`);
+        fs.copyFileSync(src, dest);
+        console.log(`✓ ${path.basename(src)} force-copied`);
+        allGood = false;
+      }
+    } else {
+      console.warn(`⚠️  ${path.basename(src)} missing in build! Copying...`);
+      fs.copyFileSync(src, dest);
+      console.log(`✓ ${path.basename(src)} copied`);
+      allGood = false;
+    }
+  }
+});
+
+if (allGood) {
+  console.log('✅ All files verified');
+} else {
+  console.log('⚠️  Some files were corrected');
 }
 
 console.log('✅ Post-build copy complete!');

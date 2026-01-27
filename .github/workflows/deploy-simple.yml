@@ -1,0 +1,80 @@
+name: Simple Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_SANITY_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_SANITY_PROJECT_ID }}
+          NEXT_PUBLIC_SANITY_DATASET: ${{ secrets.NEXT_PUBLIC_SANITY_DATASET || 'production' }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+        run: npx next build --webpack
+
+      - name: Postbuild
+        run: node scripts/copy-static.js
+
+      - name: Create deployment package
+        run: |
+          mkdir -p .deploy
+          cp -r .next/standalone .deploy/standalone
+          echo "${{ secrets.ENV_LOCAL }}" > .deploy/.env.local
+          mkdir -p .deploy/scripts
+          cp scripts/stage3-deploy.sh .deploy/scripts/stage3-deploy.sh
+          chmod +x .deploy/scripts/stage3-deploy.sh
+          cd .deploy
+          tar -czf ../deploy.tar.gz .
+          cd ..
+
+      - name: Deploy via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          source: "deploy.tar.gz"
+          target: "/tmp"
+          timeout: 600s
+
+      - name: Extract and restart
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            sudo systemctl stop converseblog || true
+            cd /tmp
+            TEMP_DIR=$(mktemp -d)
+            tar -xzf deploy.tar.gz -C $TEMP_DIR
+            sudo rm -rf /var/www/converseblog/standalone.old
+            [ -d /var/www/converseblog/standalone ] && sudo mv /var/www/converseblog/standalone /var/www/converseblog/standalone.old
+            sudo mv $TEMP_DIR/standalone /var/www/converseblog/standalone
+            [ -f $TEMP_DIR/.env.local ] && sudo cp $TEMP_DIR/.env.local /var/www/converseblog/standalone/.env.local
+            sudo chown -R $(whoami):$(whoami) /var/www/converseblog/standalone
+            sudo rm -rf $TEMP_DIR
+            rm -f deploy.tar.gz
+            cd /var/www/converseblog && bash scripts/stage3-deploy.sh || sudo systemctl restart converseblog

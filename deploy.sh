@@ -70,7 +70,7 @@ EOF
 fi
 
 echo -e "${YELLOW}🏗️  Step 6: Building the application...${NC}"
-npm run build
+npx next build --webpack
 
 if [ ! -d "$APP_DIR/.next/standalone" ]; then
     echo -e "${RED}❌ Build failed or standalone output not found${NC}"

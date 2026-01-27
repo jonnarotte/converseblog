@@ -186,8 +186,30 @@ export default async function Footer() {
           )}
         </div>
 
-        <div className="pt-8 text-sm text-gray-500 dark:text-gray-400">
-          <p>© 2026 {orgName}. All rights reserved.</p>
+        <div className="pt-8 border-t border-gray-300 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p>© 2026 {orgName}. All rights reserved.</p>
+            <div className="flex gap-4">
+              <Link 
+                href="/license" 
+                className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+              >
+                License
+              </Link>
+              <Link 
+                href="/privacy" 
+                className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+              >
+                Privacy
+              </Link>
+              <Link 
+                href="/terms" 
+                className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+              >
+                Terms
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

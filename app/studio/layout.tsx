@@ -1,6 +1,5 @@
-// Disable SSR for entire Studio route
+// Studio layout - SSR is handled by the page component
 export const dynamic = 'force-dynamic'
-export const ssr = false
 
 export default function StudioLayout({
   children,

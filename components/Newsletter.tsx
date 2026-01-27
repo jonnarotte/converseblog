@@ -2,21 +2,62 @@
 
 import { useState } from 'react'
 
-export default function Newsletter() {
+interface NewsletterProps {
+  source?: 'home' | 'blog' | 'post' | 'other'
+}
+
+export default function Newsletter({ source = 'other' }: NewsletterProps) {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [message, setMessage] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('loading')
+    setMessage('')
     
-    // TODO: Integrate with your email service (e.g., Mailchimp, ConvertKit, etc.)
-    // For now, just show success
-    setTimeout(() => {
-      setStatus('success')
-      setEmail('')
-      setTimeout(() => setStatus('idle'), 3000)
-    }, 500)
+    try {
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, source }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setStatus('success')
+        if (data.alreadySubscribed) {
+          setMessage('You are already subscribed!')
+        } else if (data.resubscribed) {
+          setMessage('Welcome back! You\'ve been resubscribed.')
+        } else {
+          setMessage('Thanks for subscribing!')
+        }
+        setEmail('')
+        setTimeout(() => {
+          setStatus('idle')
+          setMessage('')
+        }, 5000)
+      } else {
+        setStatus('error')
+        setMessage(data.error || 'Something went wrong. Please try again.')
+        setTimeout(() => {
+          setStatus('idle')
+          setMessage('')
+        }, 5000)
+      }
+    } catch (error) {
+      console.error('Newsletter subscription error:', error)
+      setStatus('error')
+      setMessage('Network error. Please check your connection and try again.')
+      setTimeout(() => {
+        setStatus('idle')
+        setMessage('')
+      }, 5000)
+    }
   }
 
   return (
@@ -32,19 +73,24 @@ export default function Newsletter() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter your email"
           required
-          className="flex-1 px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-black text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0"
+          disabled={status === 'loading'}
+          className="flex-1 px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-black text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0 disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={status === 'loading'}
           className="px-3 py-1.5 bg-blue-600 dark:bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 whitespace-nowrap flex-shrink-0"
         >
-          {status === 'loading' ? '...' : status === 'success' ? '✓' : 'Subscribe'}
+          {status === 'loading' ? 'Subscribing...' : status === 'success' ? '✓' : 'Subscribe'}
         </button>
       </form>
-      {status === 'success' && (
-        <p className="text-sm text-green-600 dark:text-green-400 mt-2">
-          Thanks for subscribing!
+      {message && (
+        <p className={`text-sm mt-2 ${
+          status === 'success' 
+            ? 'text-green-600 dark:text-green-400' 
+            : 'text-red-600 dark:text-red-400'
+        }`}>
+          {message}
         </p>
       )}
     </div>

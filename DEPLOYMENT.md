@@ -1,272 +1,188 @@
-# Deployment Guide for Converze Blog
+# Deployment Guide
 
-This guide covers deploying your Next.js blog with Sanity CMS to a Google Cloud VM.
+3-stage deployment system for GCloud VM. **No source code on VM** - only build artifacts.
 
 ## Overview
 
-Your Next.js app is a **hybrid application** (not a pure SPA):
-- It uses **Server-Side Rendering (SSR)** and **Static Site Generation (SSG)**
-- It fetches data from Sanity CMS at build time and runtime
-- It cannot be deployed as a simple static SPA
+**3 Stages:**
+1. **Local Build** - Build on your machine
+2. **Transfer** - Upload build to VM (no source code)
+3. **VM Deploy** - Run application on VM
 
-## Deployment Options
+**Benefits:**
+- ✅ Fast deployments (~100MB vs 500MB+)
+- ✅ Secure (no source code on VM)
+- ✅ Reliable (automatic backups & rollback)
+- ✅ Simple (one command)
 
-### Option 1: Node.js Binary Deployment (Recommended - Simple & Efficient)
+## Quick Start
 
-This is the **easiest and most efficient** approach for your use case.
+### One-Time Setup
 
-#### Prerequisites
-- Google Cloud VM with Node.js 18+ installed
-- Nginx (or another reverse proxy)
-- Domain name (optional, can use IP)
-
-#### Steps
-
-1. **Build the application on your VM:**
-   ```bash
-   # SSH into your VM
-   ssh your-vm-ip
-
-   # Clone or upload your project
-   cd /var/www/converseblog
-   git clone <your-repo> .  # or upload files
-
-   # Install dependencies
-   npm install --production
-
-   # Set environment variables
-   nano .env.local
-   ```
-   
-   Add these variables:
-   ```env
-   NEXT_PUBLIC_SANITY_PROJECT_ID=your-project-id
-   NEXT_PUBLIC_SANITY_DATASET=production
-   ```
-
-2. **Build the application:**
-   ```bash
-   npm run build
-   ```
-
-3. **Create a systemd service for auto-restart:**
-   ```bash
-   sudo nano /etc/systemd/system/converseblog.service
-   ```
-   
-   Add this configuration:
-   ```ini
-   [Unit]
-   Description=Converze Blog Next.js App
-   After=network.target
-
-   [Service]
-   Type=simple
-   User=www-data
-   WorkingDirectory=/var/www/converseblog
-   Environment=NODE_ENV=production
-   EnvironmentFile=/var/www/converseblog/.env.local
-   ExecStart=/usr/bin/node node_modules/.bin/next start
-   Restart=always
-   RestartSec=10
-
-   [Install]
-   WantedBy=multi-user.target
-   ```
-
-4. **Start the service:**
-   ```bash
-   sudo systemctl daemon-reload
-   sudo systemctl enable converseblog
-   sudo systemctl start converseblog
-   sudo systemctl status converseblog
-   ```
-
-5. **Configure Nginx as reverse proxy:**
-   ```bash
-   sudo nano /etc/nginx/sites-available/converseblog
-   ```
-   
-   Add this configuration:
-   ```nginx
-   server {
-       listen 80;
-       server_name your-domain.com;  # or your VM IP
-
-       location / {
-           proxy_pass http://localhost:3000;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-           proxy_cache_bypass $http_upgrade;
-       }
-   }
-   ```
-
-6. **Enable the site and restart Nginx:**
-   ```bash
-   sudo ln -s /etc/nginx/sites-available/converseblog /etc/nginx/sites-enabled/
-   sudo nginx -t
-   sudo systemctl restart nginx
-   ```
-
-7. **Set up SSL (Optional but recommended):**
-   ```bash
-   sudo apt install certbot python3-certbot-nginx
-   sudo certbot --nginx -d your-domain.com
-   ```
-
-#### Updating the Application
+Your deployment is already configured! Check `.deploy-config`:
 
 ```bash
-cd /var/www/converseblog
-git pull  # or upload new files
-npm install --production
-npm run build
-sudo systemctl restart converseblog
+VM_USER="rakshithgoudbrg"
+VM_IP="34.173.15.101"
+VM_APP_DIR="/var/www/converseblog"
+SERVICE_NAME="converseblog"
+PORT="3000"
+SSH_KEY="~/.ssh/google_compute_engine"
+DOMAIN="converze.org"
 ```
 
----
+### Deploy
 
-### Option 2: Docker Deployment (Alternative)
-
-If you prefer containerization:
-
-1. **Create Dockerfile:**
-   ```dockerfile
-   FROM node:18-alpine AS builder
-   WORKDIR /app
-   COPY package*.json ./
-   RUN npm ci
-   COPY . .
-   RUN npm run build
-
-   FROM node:18-alpine AS runner
-   WORKDIR /app
-   ENV NODE_ENV=production
-   COPY --from=builder /app/public ./public
-   COPY --from=builder /app/.next/standalone ./
-   COPY --from=builder /app/.next/static ./.next/static
-   EXPOSE 3000
-   CMD ["node", "server.js"]
-   ```
-
-2. **Update next.config.js for standalone output:**
-   ```js
-   const nextConfig = {
-     output: 'standalone',
-     // ... rest of config
-   }
-   ```
-
-3. **Build and run:**
-   ```bash
-   docker build -t converseblog .
-   docker run -d -p 3000:3000 --env-file .env.local converseblog
-   ```
-
----
-
-### Option 3: Static Export (NOT Recommended for Your Use Case)
-
-**Why this won't work well:**
-- Your blog fetches data from Sanity at runtime
-- Static export would require rebuilding every time content changes
-- You'd lose dynamic features
-
-**If you still want static export:**
-1. Set `output: 'export'` in next.config.js
-2. Run `npm run build` (creates `out` folder)
-3. Serve `out` folder with Nginx
-4. **Problem:** You'd need to rebuild and redeploy every time you add a blog post
-
----
-
-## Why Binary Deployment is Best
-
-✅ **Simple:** Just Node.js + systemd + Nginx  
-✅ **Efficient:** No container overhead  
-✅ **Dynamic:** Fetches fresh content from Sanity  
-✅ **Auto-restart:** systemd handles crashes  
-✅ **Easy updates:** Just rebuild and restart  
-✅ **Lightweight:** Minimal resource usage  
-
-## Environment Variables
-
-Create `.env.local` on your VM:
-```env
-NEXT_PUBLIC_SANITY_PROJECT_ID=your-project-id
-NEXT_PUBLIC_SANITY_DATASET=production
-```
-
-**Important:** These are public variables (NEXT_PUBLIC_ prefix), so they're safe in client-side code.
-
-## Sanity Studio Access
-
-Your Sanity Studio is available at `/studio` route. Make sure it's accessible:
-- It will work automatically with your Next.js app
-- Access it at: `https://your-domain.com/studio`
-
-## Monitoring
-
-Check logs:
+**One Command:**
 ```bash
-sudo journalctl -u converseblog -f
+./scripts/deploy-all.sh
 ```
 
-Check if service is running:
+**Or Step by Step:**
 ```bash
-sudo systemctl status converseblog
+# Stage 1: Build locally
+./scripts/stage1-build.sh
+
+# Stage 2: Transfer to VM
+./scripts/stage2-transfer.sh
+
+# Stage 3: Deploy on VM (runs automatically)
+```
+
+## What Each Stage Does
+
+### Stage 1: Local Build
+- Installs dependencies
+- Builds with `npx next build`
+- Verifies chunks (fixes Studio issues)
+- Creates `deploy.tar.gz` (~100MB)
+
+### Stage 2: Transfer
+- Tests SSH connection
+- Creates backup on VM
+- Uploads tarball
+- Extracts on VM
+- Verifies files
+
+### Stage 3: VM Deploy
+- Installs Node.js (if needed)
+- Creates systemd service
+- Configures Nginx for converze.org
+- Starts application
+- Health checks
+
+## What's on VM?
+
+**ONLY:**
+- `.next/standalone/` directory (~100MB)
+- `.env.local` file
+- Deployment scripts
+
+**NOT:**
+- ❌ Source code
+- ❌ node_modules (only production deps)
+- ❌ Git repository
+- ❌ Development files
+
+## Requirements
+
+### Local Machine
+- Node.js 18+
+- SSH access to VM
+- `.env.local` configured
+
+### VM
+- Node.js 18+ (installed automatically)
+- Nginx (installed automatically)
+- SSH access
+
+## Management Commands
+
+```bash
+# Check status
+ssh -i ~/.ssh/google_compute_engine rakshithgoudbrg@34.173.15.101 \
+  'sudo systemctl status converseblog'
+
+# View logs
+ssh -i ~/.ssh/google_compute_engine rakshithgoudbrg@34.173.15.101 \
+  'sudo journalctl -u converseblog -f'
+
+# Restart
+ssh -i ~/.ssh/google_compute_engine rakshithgoudbrg@34.173.15.101 \
+  'sudo systemctl restart converseblog'
 ```
 
 ## Troubleshooting
 
-1. **Port 3000 already in use:**
-   - Change port in systemd service: `ExecStart=/usr/bin/node node_modules/.bin/next start -p 3001`
-   - Update Nginx proxy_pass accordingly
-
-2. **Build fails:**
-   - Check Node.js version: `node --version` (needs 18+)
-   - Check environment variables are set
-
-3. **Sanity connection issues:**
-   - Verify project ID and dataset in `.env.local`
-   - Check Sanity project settings allow public read access
-
-4. **Nginx 502 Bad Gateway:**
-   - Check if Next.js app is running: `curl http://localhost:3000`
-   - Check Nginx error logs: `sudo tail -f /var/log/nginx/error.log`
-
-## Security Checklist
-
-- [ ] Firewall configured (only ports 80, 443 open)
-- [ ] SSL certificate installed
-- [ ] Environment variables secured
-- [ ] Regular updates scheduled
-- [ ] Backups configured
-
-## Cost Estimation
-
-- **VM:** ~$5-10/month (small instance)
-- **Sanity:** Free tier (up to 3 users, 10K documents)
-- **Domain:** ~$10-15/year (optional)
-- **Total:** ~$5-10/month
-
----
-
-## Quick Start Commands
-
+### SSH Connection Failed
 ```bash
-# On your VM
-cd /var/www/converseblog
-npm install --production
-npm run build
-sudo systemctl start converseblog
-sudo systemctl status converseblog
+# Test connection
+ssh -i ~/.ssh/google_compute_engine rakshithgoudbrg@34.173.15.101 "echo 'OK'"
+
+# Check key permissions
+chmod 600 ~/.ssh/google_compute_engine
 ```
 
-Your blog will be live at your VM's IP or domain!
+### Build Fails
+- Check `.env.local` exists
+- Verify Node.js: `node --version` (needs 18+)
+- Check disk space
+
+### Studio Not Loading (Missing Chunks)
+The deployment scripts automatically copy all chunks. If issues persist:
+
+```bash
+# On VM, verify chunks exist
+ssh -i ~/.ssh/google_compute_engine rakshithgoudbrg@34.173.15.101 \
+  'ls -la /var/www/converseblog/standalone/.next/static/chunks/*.js | wc -l'
+```
+
+### Service Won't Start
+```bash
+# Check logs
+ssh -i ~/.ssh/google_compute_engine rakshithgoudbrg@34.173.15.101 \
+  'sudo journalctl -u converseblog -n 50'
+```
+
+## After Deployment
+
+Your site will be available at:
+- **HTTP:** http://converze.org
+- **Studio:** http://converze.org/studio
+
+## Security Features
+
+- ✅ Automatic backups before deployment
+- ✅ Health checks before/after
+- ✅ Automatic rollback on failure
+- ✅ Chunk verification
+- ✅ No source code on VM
+
+## Scripts Reference
+
+- `scripts/stage1-build.sh` - Local build
+- `scripts/stage2-transfer.sh` - Transfer to VM
+- `scripts/stage3-deploy.sh` - Deploy on VM
+- `scripts/deploy-all.sh` - Run all stages
+- `scripts/verify-deployment.sh` - Verify configuration
+- `scripts/vm-cleanup.sh` - Cleanup script (runs on VM)
+- `scripts/run-vm-cleanup.sh` - Run cleanup remotely
+
+## VM Cleanup & Optimization
+
+To clean up unnecessary files and optimize your VM:
+
+```bash
+./scripts/run-vm-cleanup.sh
+```
+
+This will:
+- Remove old backups (keeps last 2)
+- Clean old deploy tarballs
+- Remove temporary files
+- Clean npm and system caches
+- Remove old log files (keeps last 7 days)
+- Remove source code (not needed with standalone builds)
+- Optimize disk and memory usage
+
+**Note:** Some operations require sudo. You'll be prompted for your password.

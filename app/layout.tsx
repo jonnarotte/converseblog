@@ -1,5 +1,6 @@
 import "../styles/globals.css"
 import type { Metadata } from "next"
+import GoogleAnalytics from "@/components/GoogleAnalytics"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 const siteName = 'Converze'
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
-  keywords: ['voice analysis', 'communication', 'speech patterns', 'voice visualization', 'self-reflection', 'speech improvement', 'voice training'],
+  keywords: ['voice analysis', 'communication', 'speech patterns', 'voice visualization', 'self-reflection', 'speech improvement', 'voice training', 'communication skills', 'voice coaching', 'speech analysis'],
   authors: [{ name: siteName }],
   creator: siteName,
   publisher: siteName,
@@ -23,11 +24,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.ico' },
       { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
     ],
-    shortcut: '/favicon.ico',
-    apple: '/favicon.ico',
+    shortcut: '/favicon.svg',
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
   manifest: '/manifest.json',
   openGraph: {
@@ -66,9 +70,10 @@ export const metadata: Metadata = {
   },
   verification: {
     // Add your verification codes here when available
-    // google: 'your-google-verification-code',
-    // yandex: 'your-yandex-verification-code',
-    // yahoo: 'your-yahoo-verification-code',
+    // google: process.env.GOOGLE_SITE_VERIFICATION,
+    // yandex: process.env.YANDEX_VERIFICATION,
+    // yahoo: process.env.YAHOO_VERIFICATION,
+    // bing: process.env.BING_VERIFICATION,
   },
   alternates: {
     types: {
@@ -76,6 +81,13 @@ export const metadata: Metadata = {
         { url: `${siteUrl}/feed.xml`, title: 'Converze Blog RSS Feed' },
       ],
     },
+  },
+  category: 'Technology',
+  classification: 'Blog',
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+    'mobile-web-app-capable': 'yes',
   },
 }
 
@@ -92,8 +104,16 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://cdn.sanity.io" />
         <link rel="dns-prefetch" href="https://cdn.sanity.io" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         {/* RSS Feed */}
         <link rel="alternate" type="application/rss+xml" title="Converze Blog RSS Feed" href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/feed.xml`} />
+        {/* Enhanced SEO */}
+        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-colors overflow-x-hidden w-full">
         <script
@@ -101,10 +121,22 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  var theme = localStorage.getItem('theme');
+                  // Check cookie first (session-based), then localStorage (persistent)
+                  function getCookie(name) {
+                    var value = "; " + document.cookie;
+                    var parts = value.split("; " + name + "=");
+                    if (parts.length === 2) return parts.pop().split(";").shift();
+                    return null;
+                  }
+                  
+                  var theme = getCookie('theme') || localStorage.getItem('theme');
                   if (!theme) {
                     theme = 'light';
                     localStorage.setItem('theme', 'light');
+                    // Set cookie for session tracking
+                    var expires = new Date();
+                    expires.setTime(expires.getTime() + 365 * 24 * 60 * 60 * 1000);
+                    document.cookie = 'theme=light;expires=' + expires.toUTCString() + ';path=/;SameSite=Lax';
                   }
                   if (theme === 'dark') {
                     document.documentElement.classList.add('dark');
@@ -116,6 +148,7 @@ export default function RootLayout({
             `,
           }}
         />
+        <GoogleAnalytics />
         <div className="w-full overflow-x-hidden">
           {children}
         </div>
