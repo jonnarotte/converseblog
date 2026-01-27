@@ -33,19 +33,91 @@ process.env.WEBHOOK_SECRET = 'test-webhook-secret'
 process.env.SANITY_API_TOKEN = 'test-sanity-token'
 
 // Mock Resend API
+const originalFetch = global.fetch
 global.fetch = jest.fn((url, options) => {
-  if (url.includes('api.resend.com')) {
-    return Promise.resolve({
-      ok: true,
-      json: async () => ({
-        id: 'test-email-id',
-        from: options?.body ? JSON.parse(options.body).from : 'test@example.com',
-        to: options?.body ? JSON.parse(options.body).to : [],
-        created_at: new Date().toISOString(),
-      }),
-    })
+  const urlString = typeof url === 'string' ? url : url.toString()
+  
+  if (urlString.includes('api.resend.com')) {
+    // Handle different Resend endpoints
+    if (urlString.includes('/contacts')) {
+      const method = options?.method || 'GET'
+      
+      if (method === 'GET') {
+        // Check if it's a specific contact (has /contacts/email) or list (has ?)
+        if (urlString.includes('/contacts/') && !urlString.includes('?')) {
+          // Get specific contact - return not found by default (tests will override)
+          return Promise.resolve({
+            ok: false,
+            status: 404,
+            json: async () => ({ error: { message: 'not found' } }),
+          })
+        } else {
+          // List contacts - return empty by default (tests will override)
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              data: [],
+            }),
+          })
+        }
+      } else if (method === 'POST') {
+        // Create contact
+        return Promise.resolve({
+          ok: true,
+          status: 201,
+          json: async () => {
+            let body = {}
+            try {
+              body = options?.body && typeof options.body === 'string' 
+                ? JSON.parse(options.body) 
+                : (options?.body || {})
+            } catch (e) {
+              body = {}
+            }
+            return {
+              id: 'contact-id',
+              email: body.email || 'test@example.com',
+              unsubscribed: body.unsubscribed || false,
+              created_at: new Date().toISOString(),
+            }
+          },
+        })
+      } else if (method === 'PATCH') {
+        // Update contact
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            id: 'contact-id',
+            email: url.split('/contacts/')[1]?.split('?')[0] || 'test@example.com',
+            unsubscribed: false,
+            created_at: new Date().toISOString(),
+          }),
+        })
+      }
+    } else if (url.includes('/emails')) {
+      // Send email
+      return Promise.resolve({
+        ok: true,
+        json: async () => {
+          let body = {}
+          try {
+            body = options?.body && typeof options.body === 'string' 
+              ? JSON.parse(options.body) 
+              : (options?.body || {})
+          } catch (e) {
+            body = {}
+          }
+          return {
+            id: 'test-email-id',
+            from: body.from || 'test@example.com',
+            to: body.to || [],
+            created_at: new Date().toISOString(),
+          }
+        },
+      })
+    }
   }
-  return Promise.reject(new Error('Unknown fetch call'))
+  return Promise.reject(new Error(`Unknown fetch call: ${url}`))
 })
 
 // Mock Sanity client - must be before any imports

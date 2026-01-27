@@ -1,14 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@sanity/client'
-import { redirect } from 'next/navigation'
-
-const writeClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '',
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-  useCdn: false,
-  apiVersion: '2024-01-01',
-  token: process.env.SANITY_API_TOKEN,
-})
+import { getContact, createOrUpdateContact } from '@/lib/email'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -19,20 +10,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const subscriber = await writeClient.fetch(
-      `*[_type == "newsletterSubscriber" && email == $email][0]`,
-      { email: decodeURIComponent(email) }
-    )
+    const decodedEmail = decodeURIComponent(email)
+    
+    // Check if contact exists in Resend
+    const contact = await getContact(decodedEmail)
 
-    if (!subscriber) {
+    if (!contact) {
       return new Response('Subscriber not found', { status: 404 })
     }
 
-    // Update status to unsubscribed
-    await writeClient
-      .patch(subscriber._id)
-      .set({ status: 'unsubscribed' })
-      .commit()
+    // Unsubscribe in Resend
+    await createOrUpdateContact(decodedEmail, { unsubscribed: true })
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
     

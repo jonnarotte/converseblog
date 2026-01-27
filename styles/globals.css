@@ -104,16 +104,45 @@
     max-width: 100%;
   }
 
-  /* Prevent nested scrollbars - only allow body scroll */
-  section, div {
-    overflow-x: hidden;
-    overflow-y: visible;
+  /* CRITICAL: Only body/html can scroll - prevent ALL nested scrollbars */
+  /* Force all containers to not scroll */
+  section, div:not([class*="absolute"]):not([class*="fixed"]), main, article, aside, header, footer {
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
   }
   
-  /* Mobile-specific: hide all scrollbars except body */
+  /* Only body can scroll */
+  html {
+    overflow-y: scroll !important;
+  }
+  
+  body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* Exception: Only absolute/fixed popups can scroll (like search dropdown) */
+  [class*="absolute"][class*="z-50"][class*="max-h"] {
+    overflow-y: auto !important;
+  }
+  
+  /* Mobile-specific: hide scrollbar, ensure no nested scrollbars */
   @media (max-width: 768px) {
-    section, div, main {
+    html, body {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    
+    html::-webkit-scrollbar, body::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+    
+    /* Force no scrolling on any container except body */
+    section, div:not([class*="absolute"]):not([class*="fixed"]), main, article, aside {
       overflow-y: visible !important;
+      overflow-x: hidden !important;
       -webkit-overflow-scrolling: touch;
     }
   }
