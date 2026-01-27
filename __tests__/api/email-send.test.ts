@@ -6,17 +6,17 @@ import { POST } from '@/app/api/email/send/route'
 import { NextRequest } from 'next/server'
 
 // Mock the email service
-jest.mock('@/lib/email', () => ({
-  sendEmail: jest.fn(),
-  createBlogPostEmail: jest.fn(() => '<html>Test Email</html>'),
-  createCustomEmail: jest.fn(() => '<html>Custom Email</html>'),
-}))
-
-// Mock Resend Contacts API
 const mockSubscribers = [
   { email: 'subscriber1@example.com', unsubscribed: false },
   { email: 'subscriber2@example.com', unsubscribed: false },
 ]
+
+jest.mock('@/lib/email', () => ({
+  sendEmail: jest.fn(),
+  createBlogPostEmail: jest.fn(() => '<html>Test Email</html>'),
+  createCustomEmail: jest.fn(() => '<html>Custom Email</html>'),
+  listContacts: jest.fn(() => Promise.resolve({ data: mockSubscribers })),
+}))
 
 // Mock Sanity client (still needed for fetching blog posts)
 jest.mock('@sanity/client', () => {
@@ -45,15 +45,9 @@ describe('POST /api/email/send', () => {
   })
 
   it('sends custom email with valid auth', async () => {
-    const { sendEmail } = require('@/lib/email')
-    const mockFetch = global.fetch as jest.Mock
+    const { sendEmail, listContacts } = require('@/lib/email')
     
-    // Mock Resend contacts list API
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: mockSubscribers }),
-    })
-    
+    listContacts.mockResolvedValueOnce({ data: mockSubscribers })
     sendEmail.mockResolvedValue({ id: 'test-id' })
 
     const request = new NextRequest(
@@ -80,9 +74,8 @@ describe('POST /api/email/send', () => {
   })
 
   it('sends blog post email', async () => {
-    const { sendEmail, createBlogPostEmail } = require('@/lib/email')
+    const { sendEmail, createBlogPostEmail, listContacts } = require('@/lib/email')
     const { createClient } = require('@sanity/client')
-    const mockFetch = global.fetch as jest.Mock
     
     // Mock post data
     const mockPost = {
@@ -95,11 +88,8 @@ describe('POST /api/email/send', () => {
       authors: [],
     }
     
-    // Mock Resend contacts API (first call)
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: mockSubscribers }),
-    })
+    // Mock Resend contacts API
+    listContacts.mockResolvedValueOnce({ data: mockSubscribers })
     
     // Mock Sanity for post fetch
     const mockClient = createClient()
@@ -131,13 +121,10 @@ describe('POST /api/email/send', () => {
   })
 
   it('validates required fields', async () => {
-    const mockFetch = global.fetch as jest.Mock
+    const { listContacts } = require('@/lib/email')
     
     // Mock Resend contacts (even though validation fails first)
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: [] }),
-    })
+    listContacts.mockResolvedValueOnce({ data: [] })
     
     const request = new NextRequest(
       'http://localhost:3000/api/email/send?key=test-api-key',
