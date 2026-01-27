@@ -28,14 +28,13 @@ export default function Logo({ className = "", size = 28, variant = 'icon' }: Lo
             <stop offset="100%" style={{stopColor: '#6366f1', stopOpacity: 1}} />
           </linearGradient>
         </defs>
-        {/* Icon */}
+        {/* Simplified icon - clean voice wave */}
         <g transform="translate(20, 20)">
-          <circle cx="0" cy="0" r="18" fill="url(#logoGrad)"/>
-          <circle cx="0" cy="0" r="2" fill="white" opacity="0.9"/>
-          <path d="M 0,-10 Q -5,-10 -5,-5 Q -5,0 0,0 Q 5,0 5,-5 Q 5,-10 0,-10 Z" fill="white" opacity="0.8"/>
-          <path d="M 0,-14 Q -7,-14 -7,-7 Q -7,0 0,0 Q 7,0 7,-7 Q 7,-14 0,-14 Z" fill="white" opacity="0.6"/>
-          <path d="M -7,0 Q -11,0 -11,4 Q -11,8 -7,8 Q -3,8 -3,4 Q -3,0 -7,0 Z" fill="white" opacity="0.7"/>
-          <path d="M 7,0 Q 11,0 11,4 Q 11,8 7,8 Q 3,8 3,4 Q 3,0 7,0 Z" fill="white" opacity="0.7"/>
+          <circle cx="0" cy="0" r="16" fill="url(#logoGrad)"/>
+          {/* Simple voice wave - 3 clean arcs */}
+          <path d="M -8,0 Q -8,-6 0,-6 Q 8,-6 8,0" stroke="white" strokeWidth="2" fill="none" opacity="0.9"/>
+          <path d="M -10,0 Q -10,-8 0,-8 Q 10,-8 10,0" stroke="white" strokeWidth="1.5" fill="none" opacity="0.7"/>
+          <path d="M -6,0 Q -6,-4 0,-4 Q 6,-4 6,0" stroke="white" strokeWidth="2.5" fill="none" opacity="1"/>
         </g>
         {/* Text */}
         <text x="50" y="28" fontSize="20" fontWeight="600" fill="currentColor" fontFamily="system-ui, -apple-system, sans-serif">
@@ -45,7 +44,7 @@ export default function Logo({ className = "", size = 28, variant = 'icon' }: Lo
     )
   }
 
-  // Icon only (for navbar, favicon)
+  // Icon only (for navbar, favicon) - simplified and cleaner
   return (
     <svg
       width={size}
@@ -72,24 +71,14 @@ export default function Logo({ className = "", size = 28, variant = 'icon' }: Lo
       </defs>
       
       {/* Background circle with gradient */}
-      <circle cx="32" cy="32" r="30" fill="url(#iconGrad)"/>
+      <circle cx="32" cy="32" r="28" fill="url(#iconGrad)"/>
       
-      {/* Voice wave visualization - iconic design */}
+      {/* Simplified voice wave - clean and minimal */}
       <g transform="translate(32, 32)">
-        {/* Center dot */}
-        <circle cx="0" cy="0" r="2" fill="white" opacity="0.9"/>
-        
-        {/* Sound waves radiating outward - creates iconic voice visualization */}
-        <path d="M 0,-8 Q -4,-8 -4,-4 Q -4,0 0,0 Q 4,0 4,-4 Q 4,-8 0,-8 Z" fill="white" opacity="0.8"/>
-        <path d="M 0,-12 Q -6,-12 -6,-6 Q -6,0 0,0 Q 6,0 6,-6 Q 6,-12 0,-12 Z" fill="white" opacity="0.6"/>
-        <path d="M 0,-16 Q -8,-16 -8,-8 Q -8,0 0,0 Q 8,0 8,-8 Q 8,-16 0,-16 Z" fill="white" opacity="0.4"/>
-        
-        {/* Side waves for depth and recognition */}
-        <path d="M -6,0 Q -10,0 -10,4 Q -10,8 -6,8 Q -2,8 -2,4 Q -2,0 -6,0 Z" fill="white" opacity="0.7"/>
-        <path d="M 6,0 Q 10,0 10,4 Q 10,8 6,8 Q 2,8 2,4 Q 2,0 6,0 Z" fill="white" opacity="0.7"/>
-        
-        {/* Bottom accent */}
-        <path d="M 0,4 Q -3,4 -3,7 Q -3,10 0,10 Q 3,10 3,7 Q 3,4 0,4 Z" fill="white" opacity="0.5"/>
+        {/* Three clean arcs representing voice waves */}
+        <path d="M -12,0 Q -12,-10 0,-10 Q 12,-10 12,0" stroke="white" strokeWidth="3" fill="none" opacity="1"/>
+        <path d="M -16,0 Q -16,-14 0,-14 Q 16,-14 16,0" stroke="white" strokeWidth="2" fill="none" opacity="0.8"/>
+        <path d="M -8,0 Q -8,-6 0,-6 Q 8,-6 8,0" stroke="white" strokeWidth="3.5" fill="none" opacity="1"/>
       </g>
     </svg>
   )
