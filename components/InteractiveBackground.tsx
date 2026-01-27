@@ -12,9 +12,11 @@ interface Particle {
   opacity: number
 }
 
-// Detect low-end devices
+// Detect low-end devices and mobile
 function isLowEndDevice(): boolean {
   if (typeof window === 'undefined') return false
+  // Disable on mobile devices
+  if (window.innerWidth < 768) return true
   // Check for reduced motion preference
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true
   // Check hardware concurrency (CPU cores)
