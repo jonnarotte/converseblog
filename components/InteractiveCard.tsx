@@ -5,6 +5,7 @@ import { useRef, useState, useEffect } from 'react'
 interface InteractiveCardProps {
   children: React.ReactNode
   className?: string
+  style?: React.CSSProperties
 }
 
 // Throttle function for performance
@@ -19,7 +20,7 @@ function throttle<T extends (...args: any[]) => any>(func: T, limit: number): T 
   }) as T
 }
 
-export default function InteractiveCard({ children, className = '' }: InteractiveCardProps) {
+export default function InteractiveCard({ children, className = '', style }: InteractiveCardProps) {
   const cardRef = useRef<HTMLDivElement>(null)
   const [transform, setTransform] = useState({ rotateX: 0, rotateY: 0 })
   const [isHovered, setIsHovered] = useState(false)
@@ -80,6 +81,7 @@ export default function InteractiveCard({ children, className = '' }: Interactiv
         transformStyle: 'preserve-3d',
         overflow: 'visible',
         maxHeight: 'none',
+        ...style,
       }}
     >
       {children}

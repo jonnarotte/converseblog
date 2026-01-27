@@ -105,27 +105,31 @@
   }
 
   /* CRITICAL: Only body/html can scroll - prevent ALL nested scrollbars */
-  /* Force all containers to not scroll - be very aggressive */
-  section, 
-  div:not([class*="absolute"]):not([class*="fixed"]):not([data-sanity]):not([data-ui]), 
-  main, 
-  article, 
-  aside, 
-  header, 
-  footer {
+  /* Override Tailwind overflow classes that create scrollbars */
+  section:not([data-sanity]):not([data-ui]), 
+  div:not([class*="absolute"]):not([class*="fixed"]):not([data-sanity]):not([data-ui]):not([class*="overflow-auto"]):not([class*="overflow-scroll"]), 
+  main:not([data-sanity]):not([data-ui]), 
+  article:not([data-sanity]):not([data-ui]), 
+  aside:not([data-sanity]):not([data-ui]), 
+  header:not([data-sanity]):not([data-ui]), 
+  footer:not([data-sanity]):not([data-ui]) {
     overflow-x: hidden !important;
     overflow-y: visible !important;
     max-height: none !important;
     height: auto !important;
   }
   
-  /* Ensure all child divs also don't scroll */
-  section > div,
-  main > div,
-  article > div {
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
-    max-height: none !important;
+  /* Override Tailwind overflow-hidden on cards/sections - only allow for image containers */
+  section[class*="overflow-hidden"],
+  div[class*="overflow-hidden"]:not([class*="aspect"]):not([class*="bg-gray-100"]):not([class*="bg-gray-900"]) {
+    overflow: visible !important;
+  }
+  
+  /* Keep overflow-hidden ONLY for image aspect containers */
+  [class*="aspect-video"][class*="overflow-hidden"],
+  [class*="aspect-ratio"][class*="overflow-hidden"],
+  div[class*="aspect-video"][class*="overflow-hidden"][class*="bg-gray"] {
+    overflow: hidden !important;
   }
   
   /* Only body can scroll */

@@ -1,29 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <defs>
-    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
     </linearGradient>
   </defs>
-  
-  <!-- Background circle -->
-  <circle cx="32" cy="32" r="30" fill="url(#grad1)"/>
-  
-  <!-- Voice wave visualization - iconic design -->
+  <circle cx="32" cy="32" r="28" fill="url(#iconGrad)"/>
   <g transform="translate(32, 32)">
-    <!-- Center dot -->
-    <circle cx="0" cy="0" r="2" fill="white" opacity="0.9"/>
-    
-    <!-- Sound waves radiating outward -->
-    <path d="M 0,-8 Q -4,-8 -4,-4 Q -4,0 0,0 Q 4,0 4,-4 Q 4,-8 0,-8 Z" fill="white" opacity="0.8"/>
-    <path d="M 0,-12 Q -6,-12 -6,-6 Q -6,0 0,0 Q 6,0 6,-6 Q 6,-12 0,-12 Z" fill="white" opacity="0.6"/>
-    <path d="M 0,-16 Q -8,-16 -8,-8 Q -8,0 0,0 Q 8,0 8,-8 Q 8,-16 0,-16 Z" fill="white" opacity="0.4"/>
-    
-    <!-- Side waves for depth -->
-    <path d="M -6,0 Q -10,0 -10,4 Q -10,8 -6,8 Q -2,8 -2,4 Q -2,0 -6,0 Z" fill="white" opacity="0.7"/>
-    <path d="M 6,0 Q 10,0 10,4 Q 10,8 6,8 Q 2,8 2,4 Q 2,0 6,0 Z" fill="white" opacity="0.7"/>
-    
-    <!-- Bottom accent -->
-    <path d="M 0,4 Q -3,4 -3,7 Q -3,10 0,10 Q 3,10 3,7 Q 3,4 0,4 Z" fill="white" opacity="0.5"/>
+    <path d="M -12,0 Q -12,-10 0,-10 Q 12,-10 12,0" stroke="white" stroke-width="3" fill="none" opacity="1"/>
+    <path d="M -16,0 Q -16,-14 0,-14 Q 16,-14 16,0" stroke="white" stroke-width="2" fill="none" opacity="0.8"/>
+    <path d="M -8,0 Q -8,-6 0,-6 Q 8,-6 8,0" stroke="white" stroke-width="3.5" fill="none" opacity="1"/>
   </g>
 </svg>

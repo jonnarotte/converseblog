@@ -1,23 +1,28 @@
 /* Studio-specific styles to override global CSS - ONLY affects Studio */
 
 /* CRITICAL: Prevent global overflow rules from affecting Studio */
-html:has([data-sanity]),
-body:has([data-sanity]),
-html:has([data-ui]),
-body:has([data-ui]) {
+/* Only reset overflow for Studio containers, not everything */
+[data-sanity],
+[data-ui] {
   overflow: visible !important;
-  max-width: none !important;
+  max-width: 100% !important;
   width: 100% !important;
   height: 100% !important;
 }
 
-/* Override global section/div rules for Studio */
-html:has([data-sanity]) section,
-html:has([data-sanity]) div,
-html:has([data-sanity]) main,
-html:has([data-ui]) section,
-html:has([data-ui]) div,
-html:has([data-ui]) main {
+/* Ensure Studio has proper background - don't force white/black, let Studio handle it */
+body:has([data-sanity]),
+body:has([data-ui]) {
+  background: transparent !important;
+}
+
+/* Reset Studio elements to default sizes - target Studio container specifically */
+body:has([data-sanity]) [data-sanity] *,
+body:has([data-ui]) [data-ui] *,
+[data-sanity] *,
+[data-ui] * {
+  font-weight: normal !important;
+  letter-spacing: normal !important;
   overflow: visible !important;
   max-width: none !important;
 }

@@ -10,7 +10,7 @@ export default async function FeaturedPosts() {
   if (featured.length === 0) return null
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-8" style={{ overflow: 'visible', maxHeight: 'none' }}>
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-medium">Latest from the Blog</h2>
         <Link
@@ -32,7 +32,8 @@ export default async function FeaturedPosts() {
             <Link
               key={post._id}
               href={`/blog/${postSlug}`}
-              className="group block border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-lg"
+              className="group block border border-gray-300 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-lg"
+              style={{ overflow: 'visible' }}
             >
               {coverImageUrl && (
                 <div className="aspect-video overflow-hidden bg-gray-100 dark:bg-gray-900">
