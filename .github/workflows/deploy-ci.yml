@@ -3,13 +3,11 @@ name: CI/CD Deploy
 on:
   push:
     branches:
-      - main
-      - master
+      - refactor-blogsite
   workflow_dispatch: # Allow manual trigger
   pull_request:
     branches:
-      - main
-      - master
+      - refactor-blogsite
 
 env:
   NODE_VERSION: '20.x'
