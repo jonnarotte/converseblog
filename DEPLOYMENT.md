@@ -2,6 +2,12 @@
 
 This project uses **GitHub Actions CI/CD** with a safe branch-based workflow. Development happens in `develop`, and production deployments happen automatically when code is merged to `main`.
 
+**Current Status (2026-01-27):**
+- ✅ CI/CD pipeline fully integrated
+- ✅ Newsletter managed via Resend (not Sanity)
+- ✅ All unnecessary scripts and docs removed
+- ✅ Codebase refactored for maintainability
+
 ## Branch Strategy
 
 ### `develop` Branch

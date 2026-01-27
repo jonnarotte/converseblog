@@ -54,12 +54,12 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 ### Tech Stack
 
-- **Next.js 16** (App Router) - React framework
-- **TypeScript** - Type safety
-- **Sanity CMS** - Headless content management
+- **Next.js 16** (App Router) - React framework with Server Components
+- **TypeScript** - Full type safety
+- **Sanity CMS** - Headless content management (blog posts, authors, site settings)
 - **Tailwind CSS** - Utility-first styling
-- **Resend** - Email delivery
-- **Jest + React Testing Library** - Unit testing
+- **Resend** - Email delivery & newsletter management (replaces Sanity for subscribers)
+- **Jest + React Testing Library** - Unit & integration testing
 - **Playwright** - E2E testing
 
 ### Architecture Patterns
@@ -82,10 +82,10 @@ Visit [http://localhost:3000](http://localhost:3000)
 - Environment-based configuration
 
 #### 4. **Content Management**
-- Sanity CMS for content
+- Sanity CMS for blog content (posts, authors, site settings)
 - Schema-driven content types
-- Real-time preview support
-- Studio integrated at `/studio`
+- Studio integrated at `/studio` (completely isolated from main site)
+- **Newsletter subscribers managed via Resend** (not Sanity)
 
 ### Directory Structure
 
@@ -278,25 +278,44 @@ await client.create({
 
 **Studio Access**: `http://localhost:3000/studio`
 
-### 2. Resend (Email Service)
+### 2. Resend (Email & Newsletter Service)
 
-**Purpose**: Send newsletter emails, transactional emails
+**Purpose**: 
+- Newsletter subscription management (Contacts API)
+- Email sending (transactional & campaigns)
+- **Replaces Sanity for subscriber management**
 
 **Setup:**
 1. Create account at [resend.com](https://resend.com)
 2. Get API key
-3. Verify domain (for production)
-4. Configure in `.env.local`
+3. Verify domain (for production) - use `.org` domain (not `.com`)
+4. Configure in `.env.local`: `RESEND_API_KEY=re_...`
 
 **Usage:**
 ```typescript
-import { sendEmail } from '@/lib/email'
+// Newsletter subscription
+import { createOrUpdateContact } from '@/lib/email'
+await createOrUpdateContact('user@example.com', { unsubscribed: false })
 
+// Send email
+import { sendEmail } from '@/lib/email'
 await sendEmail({
   to: 'user@example.com',
   subject: 'Welcome!',
   html: '<p>Welcome to our newsletter</p>',
 })
+
+// Get subscribers
+import { listContacts } from '@/lib/email'
+const subscribers = await listContacts()
+```
+
+**API Helpers** (`lib/email.ts`):
+- `createOrUpdateContact()` - Subscribe/unsubscribe
+- `getContact()` - Check subscription status
+- `listContacts()` - Get all active subscribers
+- `removeContact()` - Remove subscriber
+- `sendEmail()` - Send transactional emails
 ```
 
 **API Location**: `lib/email.ts`
@@ -716,6 +735,39 @@ export default function MyComponent({ title, optional }: MyComponentProps) {
 
 ---
 
+## Current Project Status
+
+### ✅ Implemented Features
+- Blog posts with Sanity CMS
+- Newsletter subscriptions (Resend Contacts API)
+- Email sending (Resend)
+- Dark/Light theme toggle
+- Search functionality
+- SEO optimization (structured data, sitemap, RSS)
+- Sanity Studio at `/studio` (isolated from main site)
+- Responsive design
+- Performance optimizations
+
+### 🗑️ Removed/Deprecated
+- ❌ `newsletterSubscriber` schema (now using Resend)
+- ❌ `userSession` schema (removed)
+- ❌ Session tracking API (`/api/session`)
+- ❌ Static content files (`content/posts.ts`)
+- ❌ Unnecessary deployment scripts
+- ❌ Redundant documentation files
+
+### 📁 Current Schema Types (Sanity)
+- `post` - Blog posts
+- `author` - Blog authors
+- `about` - About page content
+- `siteSettings` - Site configuration
+
+### 🔧 Key Scripts
+- `scripts/copy-static.js` - Post-build file copying
+- `scripts/test-local.sh` - Pre-push test runner
+- `scripts/verify-build.sh` - Build verification
+- `scripts/stage3-deploy.sh` - Server deployment (used by CI/CD)
+
 ## Troubleshooting
 
 ### Common Issues
@@ -794,9 +846,9 @@ npm run test:e2e  # Terminal 2
 ### Getting Help
 
 1. Check this guide first
-2. Review [TESTING.md](./TESTING.md) for test issues
-3. Check [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment issues
-4. Review error messages carefully
+2. Review [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment issues
+3. Review error messages carefully
+4. Check GitHub Actions logs for CI/CD issues
 5. Check GitHub Issues (if public)
 6. Ask team members
 
