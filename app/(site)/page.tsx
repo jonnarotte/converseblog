@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <section className="space-y-24 relative w-full overflow-x-hidden" style={{ overflowY: 'visible', maxHeight: 'none' }}>
+    <section className="space-y-24 relative w-full overflow-x-hidden" style={{ overflow: 'visible', overflowY: 'visible', overflowX: 'hidden', maxHeight: 'none', height: 'auto' }}>
       {/* Interactive particle background */}
       <InteractiveBackground />
       
