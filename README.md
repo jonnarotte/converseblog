@@ -1,131 +1,138 @@
 # Converze Blog
 
-A modern, feature-rich blog built with Next.js and Sanity CMS for the Converze product.
+A modern, production-ready blog built with Next.js 16, Sanity CMS, and Resend for email management.
 
-## Features
+## 🚀 Quick Start
 
-- ✅ **Dynamic Blog Posts** - Content managed through Sanity CMS
-- ✅ **Multiple Authors** - Support for joint posts
-- ✅ **Dark/Light Theme** - Per-user theme preferences
-- ✅ **Newsletter System** - Email subscriptions with Resend
-- ✅ **SEO Optimized** - Structured data, sitemap, RSS feed
-- ✅ **Interactive Features** - Reading progress, animated stats, testimonials
-- ✅ **Search Functionality** - Real-time blog post search
-- ✅ **Social Sharing** - Share buttons on posts
-- ✅ **Related Posts** - Automatic related content suggestions
-- ✅ **Sanity Studio** - Integrated at `/studio`
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+- Sanity account
+- Resend account (for newsletter)
 
-## Quick Start
-
-### 1. Install Dependencies
+### Installation
 
 ```bash
+# Install dependencies
 npm install
-```
 
-### 2. Configure Environment
+# Configure environment
+cp .env.example .env.local
+# Edit .env.local with your credentials
 
-Create `.env.local`:
-
-```env
-NEXT_PUBLIC_SANITY_PROJECT_ID=your-project-id
-NEXT_PUBLIC_SANITY_DATASET=production
-SANITY_API_TOKEN=your-api-token
-NEXT_PUBLIC_SITE_URL=https://yourdomain.com
-```
-
-### 3. Deploy Sanity Schemas
-
-```bash
+# Deploy Sanity schemas
 npx sanity@latest login
 npx sanity@latest schema deploy
-```
 
-### 4. Run Development Server
-
-```bash
+# Run development server
 npm run dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000)
 
-### 5. Run Tests (Before Pushing)
-
-```bash
-# Quick test before pushing
-npm run test:pre-push
-
-# Or run individually:
-npm test              # Unit tests
-npm run test:e2e      # E2E tests
-npm run test:coverage # With coverage report
-```
-
-See [TESTING.md](./TESTING.md) for complete testing guide.
-
-## Documentation
-
-- **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** ⭐ - **Start here!** Complete guide for developers: setup, architecture, design principles, testing, and adding features
-- **[SETUP.md](./SETUP.md)** - Complete setup and configuration guide
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - CI/CD deployment guide
-- **[TESTING.md](./TESTING.md)** - Complete testing guide for local development
-- **[FEATURES.md](./FEATURES.md)** - All features and capabilities
-- **[EMAIL.md](./EMAIL.md)** - Newsletter and email setup
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-├── app/                    # Next.js app directory
-│   ├── (site)/            # Site routes
-│   │   ├── blog/          # Blog pages
-│   │   └── about/         # About page
-│   ├── api/               # API routes
-│   │   ├── email/         # Email sending
-│   │   └── newsletter/    # Newsletter subscriptions
-│   ├── studio/            # Sanity Studio
-│   └── layout.tsx         # Root layout
-├── components/            # React components
-├── sanity/                # Sanity configuration
-│   ├── schemaTypes/      # Content schemas
-│   └── lib/              # Sanity utilities
-├── lib/                   # App utilities
-└── scripts/              # Deployment scripts
+converseblog/
+├── app/                      # Next.js App Router
+│   ├── (site)/               # Public site routes
+│   │   ├── blog/             # Blog listing & posts
+│   │   ├── about/            # About page
+│   │   └── layout.tsx        # Site layout
+│   ├── api/                  # API routes
+│   │   ├── email/            # Email sending
+│   │   └── newsletter/       # Newsletter subscriptions (Resend)
+│   ├── studio/               # Sanity Studio (/studio)
+│   └── layout.tsx            # Root layout
+├── components/                # React components
+│   ├── BlogCard.tsx          # Blog post card
+│   ├── Newsletter.tsx         # Newsletter form
+│   ├── SearchBar.tsx         # Blog search
+│   └── ...
+├── lib/                      # Utilities
+│   ├── email.ts              # Resend API helpers
+│   ├── sanity.ts             # Sanity client & queries
+│   └── utils.ts              # General utilities
+├── sanity/                   # Sanity configuration
+│   ├── schemaTypes/          # Content schemas
+│   └── lib/                  # Sanity utilities
+├── scripts/                  # Build & deployment
+│   ├── copy-static.js        # Post-build file copying
+│   ├── test-local.sh         # Pre-push test runner
+│   └── verify-build.sh       # Build verification
+└── styles/
+    └── globals.css            # Global styles & scrollbar management
 ```
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 - **Next.js 16** - React framework with App Router
 - **Sanity CMS** - Headless content management
 - **TypeScript** - Type safety
 - **Tailwind CSS** - Utility-first styling
-- **Resend** - Email delivery service
+- **Resend** - Email delivery & newsletter management
+- **Jest** - Unit testing
+- **Playwright** - E2E testing
 
-## Deployment
+## 📚 Documentation
 
-The project uses **GitHub Actions CI/CD** with a safe branch-based workflow:
+- **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** - Complete developer guide: architecture, design principles, testing, adding features
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - CI/CD deployment guide (GitHub Actions)
 
-- **`develop` branch**: Builds and tests only (no deployment)
-- **`main` branch**: Builds and deploys to production automatically
+## 🧪 Testing
 
-### Workflow
-
-1. **Develop in `develop`** → Push code, builds automatically
-2. **Create PR** → `develop` → `main` for review
-3. **Merge to `main`** → Automatic production deployment
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete setup guide.
-
-**Quick start:**
 ```bash
-# Develop
-git checkout develop
-git push origin develop  # ✅ Builds, no deployment
+# Run all tests
+npm run test:pre-push
 
-# Deploy to production
-# Create PR: develop → main, then merge
-# ✅ Automatic deployment happens
+# Individual test commands
+npm test              # Unit tests
+npm run test:coverage # With coverage
+npm run test:e2e      # E2E tests
+npm run type-check    # TypeScript check
 ```
 
-## License
+## 🚢 Deployment
+
+**CI/CD Pipeline (GitHub Actions):**
+- `develop` branch → Builds and tests only
+- `main` branch → Builds and deploys to production
+
+**Workflow:**
+1. Develop in `develop` branch
+2. Create PR: `develop` → `main`
+3. Merge PR → Automatic deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete setup.
+
+## 🎨 Key Features
+
+- ✅ Dynamic blog posts (Sanity CMS)
+- ✅ Newsletter subscriptions (Resend)
+- ✅ Dark/Light theme
+- ✅ SEO optimized (structured data, sitemap, RSS)
+- ✅ Search functionality
+- ✅ Sanity Studio at `/studio`
+- ✅ Responsive design
+- ✅ Performance optimized
+
+## 📝 Environment Variables
+
+Required in `.env.local`:
+
+```env
+# Sanity
+NEXT_PUBLIC_SANITY_PROJECT_ID=your-project-id
+NEXT_PUBLIC_SANITY_DATASET=production
+SANITY_API_TOKEN=your-api-token
+
+# Resend (for newsletter)
+RESEND_API_KEY=your-resend-api-key
+
+# Site
+NEXT_PUBLIC_SITE_URL=https://yourdomain.com
+```
+
+## 📄 License
 
 Private project for Converze.

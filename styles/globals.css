@@ -2,25 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+/**
+ * Global Styles
+ * 
+ * This file contains base styles, scrollbar management, and Studio isolation.
+ * All component-specific styles should be in component files or Tailwind classes.
+ */
+
 @layer base {
+  /* ============================================
+     CSS Variables & Theme
+     ============================================ */
   :root {
     --prose-headings: theme('colors.black');
     --prose-body: theme('colors.gray.700');
     --prose-links: theme('colors.black');
-    --accent-color: #3b82f6; /* Blue accent */
+    --accent-color: #3b82f6;
   }
 
   .dark {
     --prose-headings: theme('colors.white');
     --prose-body: theme('colors.gray.300');
     --prose-links: theme('colors.white');
-    --accent-color: #60a5fa; /* Lighter blue for dark mode */
+    --accent-color: #60a5fa;
   }
 
-  /* Ultra-sleek font weights */
+  /* ============================================
+     Typography
+     ============================================ */
   body {
     font-weight: 300;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 
+                 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -28,35 +41,30 @@
     letter-spacing: -0.02em;
   }
 
-  .font-bold {
-    font-weight: 500;
-  }
+  .font-bold { font-weight: 500; }
+  .font-semibold { font-weight: 400; }
+  .font-medium { font-weight: 350; }
 
-  .font-semibold {
-    font-weight: 400;
-  }
-
-  .font-medium {
-    font-weight: 350;
-  }
-
-  /* Smooth transitions - only for interactive elements */
-  a, button, [role="button"] {
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* Performance: reduce repaints */
+  /* ============================================
+     Performance Optimizations
+     ============================================ */
   * {
+    box-sizing: border-box;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Optimize rendering */
   img {
     content-visibility: auto;
   }
 
-  /* Main page scrolling - ONLY html/body can scroll */
+  a, button, [role="button"] {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ============================================
+     Main Page Scrolling
+     ============================================ */
   html {
     overflow-x: hidden !important;
     overflow-y: auto !important;
@@ -72,7 +80,7 @@
     position: relative;
   }
   
-  /* Styled scrollbar for main page */
+  /* Scrollbar Styling */
   html, body {
     scrollbar-width: thin;
     scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
@@ -95,72 +103,28 @@
     background-color: rgba(156, 163, 175, 0.7);
   }
 
-  * {
-    box-sizing: border-box;
-  }
-
-  /* Ensure all containers respect viewport width */
-  section, div, main, nav, footer {
+  /* ============================================
+     Prevent Nested Scrollbars
+     ============================================ */
+  /* Only main containers - NOT all divs */
+  section:not(:has([data-sanity])):not(:has([data-ui])), 
+  main:not(:has([data-sanity])):not(:has([data-ui])), 
+  article:not(:has([data-sanity])):not(:has([data-ui])), 
+  aside:not(:has([data-sanity])):not(:has([data-ui])),
+  header:not(:has([data-sanity])):not(:has([data-ui])),
+  footer:not(:has([data-sanity])):not(:has([data-ui])) {
+    overflow-x: hidden;
+    overflow-y: visible;
     max-width: 100%;
   }
-
-  /* CRITICAL: Only body/html can scroll - prevent ALL nested scrollbars */
-  /* Universal rule: NO element can scroll except html/body */
-  *:not(html):not(body):not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])) {
-    overflow: visible !important;
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
-    max-height: none !important;
-    height: auto !important;
-    min-height: auto !important;
+  
+  /* Grid containers */
+  [class*="grid"]:not(:has([data-sanity])):not(:has([data-ui])),
+  [class*="grid"]:not(:has([data-sanity])):not(:has([data-ui])) > * {
+    overflow: visible;
   }
   
-  /* Target common container elements that might create scrollbars */
-  /* EXCLUDE Studio completely from these rules */
-  section:not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])), 
-  div:not([class*="grid"]):not([class*="absolute"]):not([class*="fixed"]):not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])),
-  main:not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])), 
-  article:not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])), 
-  aside:not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])),
-  header:not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])),
-  footer:not(:has([data-sanity="studio-layout"])):not(:has([data-sanity])):not(:has([data-ui])) {
-    overflow: visible !important;
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
-    max-height: none !important;
-    height: auto !important;
-    min-height: auto !important;
-  }
-  
-  /* Grid containers and their direct children should allow flex layout */
-  [class*="grid"]:not([data-sanity]):not([data-ui]):not(:has([data-sanity])):not(:has([data-ui])),
-  [class*="grid"]:not([data-sanity]):not([data-ui]):not(:has([data-sanity])):not(:has([data-ui])) > * {
-    overflow: visible !important;
-  }
-  
-  /* Removed duplicate - html/body scroll rules are above */
-  
-  /* Exception: Only absolute/fixed popups can scroll (like search dropdown) */
-  [class*="absolute"][class*="z-50"][class*="max-h"] {
-    overflow-y: auto !important;
-  }
-  
-  /* Exception: Keep overflow-hidden ONLY for image aspect containers - but NO scrolling */
-  [class*="aspect-video"][class*="overflow-hidden"],
-  [class*="aspect-ratio"][class*="overflow-hidden"],
-  div[class*="aspect-video"][class*="overflow-hidden"][class*="bg-gray"] {
-    overflow: hidden !important;
-    overflow-y: hidden !important;
-    overflow-x: hidden !important;
-  }
-  
-  /* Exception: Studio elements */
-  [data-sanity] *,
-  [data-ui] * {
-    overflow: visible !important;
-  }
-  
-  /* Grid items should stretch to equal height - but don't break grid layout */
+  /* Grid items stretch to equal height */
   .grid {
     align-items: stretch !important;
   }
@@ -170,8 +134,34 @@
     display: flex;
     flex-direction: column;
   }
+
+  /* ============================================
+     Exceptions
+     ============================================ */
+  /* Popups/dropdowns can scroll */
+  [class*="absolute"][class*="z-50"][class*="max-h"] {
+    overflow-y: auto !important;
+  }
   
-  /* Mobile-specific: hide scrollbar, ensure no nested scrollbars */
+  /* Image containers keep overflow-hidden */
+  [class*="aspect-video"][class*="overflow-hidden"],
+  [class*="aspect-ratio"][class*="overflow-hidden"],
+  div[class*="aspect-video"][class*="overflow-hidden"][class*="bg-gray"] {
+    overflow: hidden !important;
+  }
+  
+  /* Studio elements - completely isolated */
+  [data-sanity] *,
+  [data-ui] *,
+  [data-sanity="studio-layout"] * {
+    overflow: visible !important;
+    max-width: none !important;
+    max-height: none !important;
+  }
+
+  /* ============================================
+     Mobile Optimizations
+     ============================================ */
   @media (max-width: 768px) {
     html, body {
       scrollbar-width: none;
@@ -184,38 +174,30 @@
       height: 0;
     }
     
-    /* Force no scrolling on any container except body - be very aggressive on mobile */
-    section, 
-    div:not([class*="absolute"]):not([class*="fixed"]):not([data-sanity]):not([data-ui]), 
-    main, 
-    article, 
-    aside,
-    section > div,
-    main > div {
-      overflow: visible !important;
-      overflow-y: visible !important;
-      overflow-x: hidden !important;
-      max-height: none !important;
-      height: auto !important;
-      min-height: auto !important;
-      -webkit-overflow-scrolling: auto;
+    section:not(:has([data-sanity])):not(:has([data-ui])), 
+    main:not(:has([data-sanity])):not(:has([data-ui])), 
+    article:not(:has([data-sanity])):not(:has([data-ui])) {
+      overflow-y: visible;
+      overflow-x: hidden;
     }
   }
 
-  /* Prevent SVG overflow */
+  /* ============================================
+     SVG & Media
+     ============================================ */
   svg {
     max-width: 100%;
     height: auto;
     overflow: visible;
   }
 
-  /* Navbar - ensure it's in normal document flow and scrolls with page */
-  nav,
-  nav * {
+  /* ============================================
+     Navigation
+     ============================================ */
+  nav, nav * {
     position: static !important;
   }
   
-  /* Override any possible sticky/fixed positioning */
   nav[class*="sticky"],
   nav[class*="fixed"],
   nav.sticky,
@@ -231,4 +213,3 @@
     max-width: 100%;
   }
 }
-
