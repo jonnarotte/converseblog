@@ -105,15 +105,33 @@
   }
 
   /* CRITICAL: Only body/html can scroll - prevent ALL nested scrollbars */
-  /* Force all containers to not scroll */
-  section, div:not([class*="absolute"]):not([class*="fixed"]), main, article, aside, header, footer {
+  /* Force all containers to not scroll - be very aggressive */
+  section, 
+  div:not([class*="absolute"]):not([class*="fixed"]):not([data-sanity]):not([data-ui]), 
+  main, 
+  article, 
+  aside, 
+  header, 
+  footer {
     overflow-x: hidden !important;
     overflow-y: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+  
+  /* Ensure all child divs also don't scroll */
+  section > div,
+  main > div,
+  article > div {
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    max-height: none !important;
   }
   
   /* Only body can scroll */
   html {
     overflow-y: scroll !important;
+    overflow-x: hidden !important;
   }
   
   body {
@@ -139,10 +157,18 @@
       height: 0;
     }
     
-    /* Force no scrolling on any container except body */
-    section, div:not([class*="absolute"]):not([class*="fixed"]), main, article, aside {
+    /* Force no scrolling on any container except body - be very aggressive on mobile */
+    section, 
+    div:not([class*="absolute"]):not([class*="fixed"]):not([data-sanity]):not([data-ui]), 
+    main, 
+    article, 
+    aside,
+    section > div,
+    main > div {
       overflow-y: visible !important;
       overflow-x: hidden !important;
+      max-height: none !important;
+      height: auto !important;
       -webkit-overflow-scrolling: touch;
     }
   }
